@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# Laurent El Shafey <Laurent.El-Shafey@idiap.ch>
-# Fri Aug 23 12:32:01 CEST 2013
+# Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
+# Thu Apr 16 16:39:01 CEST 2015
 #
 # Copyright (C) 2011-2014 Idiap Research Institute, Martigny, Switzerland
 #
@@ -21,9 +21,9 @@ from setuptools import setup, find_packages
 
 setup(
 
-    name='bob.db.cbsr_nir_vis_2',
+    name='bob.db.cuhk',
     version='0.0.0a1',
-    description='CASIA NIR-VIS 2.0 Face Database protocol',
+    description='CUHK Face Sketch Database (CUFS)',
     url='',
     license='GPLv3',
     keywords = "",
@@ -48,7 +48,7 @@ setup(
     entry_points = {
       # declare database to bob
       'bob.db': [
-        'cbsr_nir_vis_2 = bob.db.cbsr_nir_vis_2.driver:Interface',
+        'cuhk = bob.db.cuhk.driver:Interface',
       ],
     },
 

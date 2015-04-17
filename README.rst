@@ -1,20 +1,21 @@
 .. vim: set fileencoding=utf-8 :
 .. Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-.. Thu Sep  4 11:35:05 CEST 2014
+.. Thu Apr 16 16:39:01 CEST 2015
 
 
 =======================================================
- CASIA NIR-VIS 2.0 Face Database
+ CUHK Face Sketch Database (CUFS)
 =======================================================
 
-This package contains the access API and descriptions for the `CASIA NIR-VIS 2.0 database <http://www.cbsr.ia.ac.cn/english/NIR-VIS-2.0-Database.html>`. 
+This package contains the access API and descriptions for the `CUHK Face Sketch Database (CUFS) <http://mmlab.ie.cuhk.edu.hk/archive/facesketch.html>`. 
 The actual raw data for the database should be downloaded from the original URL. 
 This package only contains the Bob accessor methods to use the DB directly from python, with the original protocol of the database.
 
-CASIA NIR-VIS 2.0 database offers pairs of mugshot images and their correspondent NIR photos.
-Capured by CASIA (Chinese Academy of Sciences), the images of this database were collected in four recording sessions: 2007 spring, 2009 summer, 2009 fall and 2010 summer, in which the first session is identical to the `HFB database <http://www.cbsr.ia.ac.cn/english/HFB%20Databases.asp>`. 
-The CASIA NIR-VIS 2.0 database consists of 725 subjects in total. 
-There are 1-22 VIS and 5-50 NIR face images per subject.
+CUHK Face Sketch database (CUFS) is for research on face sketch synthesis and face sketch recognition.
+It includes 188 faces from the Chinese University of Hong Kong (CUHK) student database, 123 faces from the AR database, and 295 faces from the XM2VTS database.
+There are 606 faces in total.
+For each face, there is a sketch drawn by an artist based on a photo taken in a frontal pose, under normal lighting condition, and with a neutral expression.
+
 
 You would normally not install this package unless you are maintaining it. 
 What you would do instead is to tie it in at the package you need to **use** it.
@@ -35,7 +36,7 @@ The package is available in two different distribution formats:
 1. You can download it from `PyPI <http://pypi.python.org/pypi>`_, or
 
 2. You can download it in its source form from `its git repository
-   <https://github.com/bioidiap/bob.db.cbsr_nir_vis_2>`_.
+   <https://github.com/bioidiap/bob.db.cuhk>`_.
 
 You can mix and match points 1/2 and a/b above based on your requirements. Here
 are some examples:
@@ -50,11 +51,11 @@ script)::
 
     install_requires=[
       ...
-      "bob.db.cbsr_nir_vis_2",
+      "bob.db.cuhk",
     ],
 
 Proceed normally with your ``boostrap/buildout`` steps and you should be all
-set. That means you can now import the ``bob.db.cbsr_nir_vis_2`` namespace into your scripts.
+set. That means you can now import the ``bob.db.cuhk`` namespace into your scripts.
 
 Modify your buildout.cfg and download from git
 ==============================================
@@ -68,8 +69,8 @@ lines::
   ...
   extensions = mr.developer
   auto-checkout = *
-  eggs = bob.db.cbsr_nir_vis_2
+  eggs = bob.db.cuhk
 
   [sources]
-  bob.db.cbsr_nir_vis_2 = git https://github.com/bioidiap/bob.db.cbsr_nir_vis_2.git
+  bob.db.cuhk = git https://github.com/bioidiap/bob.db.cuhk.git
   ...
