@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# Thu Oct 09 11:27:27 CEST 2014
+# Tue Aug 14 14:28:00 CEST 2015
 #
 # Copyright (C) 2012-2014 Idiap Research Institute, Martigny, Switzerland
 #
@@ -17,18 +17,42 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import bob.db.verification.filelist
+import os
+import six
+from bob.db.base import utils
+from .models import *
+from .driver import Interface
 
-class Database(bob.db.verification.filelist.Database):
-  """Wrapper class for the CASIA NIR-VIS 2.0 database for face recognition recognition (http://www.cbsr.ia.ac.cn/english/NIR-VIS-2.0-Database.html).
-  this class defines a simple protocol for training, dev and and by splitting the audio files of the database in three main parts.
+import bob.db.verification.utils
+
+SQLITE_FILE = Interface().files()[0]
+
+class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.utils.ZTDatabase):
+
+  """Wrapper class for the CUHK-CUFS database for Heterogeneous face recognition recognition (http://mmlab.ie.cuhk.edu.hk/archive/facesketch.html).
+
   """
 
-  def __init__(self, original_directory = None, original_extension = None, annotation_directory=None):
-    # call base class constructor
-    from pkg_resources import resource_filename
-    lists = resource_filename(__name__, 'lists')
-    bob.db.verification.filelist.Database.__init__(self, lists, original_directory = original_directory, original_extension = original_extension, annotation_directory=annotation_directory)
+  def __init__(self, original_directory = None, original_extension = None, annotation_directory = None):
+    # call base class constructors to open a session to the database
+    bob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File)
+    bob.db.verification.utils.ZTDatabase.__init__(self, original_directory=original_directory, original_extension=original_extension)
+
+
+  def objects(self, groups = None, protocol = None, purposes = None, model_ids = None, **kwargs):
+    """This function returns lists of File objects, which fulfill the given restrictions."""
+
+
+  def model_ids(self, protocol=None, groups=None, gender=None):
+    return []
+
+
+  def groups(self, protocol = None, **kwargs):
+    """This function returns the list of groups for this database."""
+
+
+  def tmodel_ids(self, groups = None, protocol = None, **kwargs):
+    """This function returns the ids of the T-Norm models of the given groups for the given protocol."""
 
 
   def tobjects(self, protocol=None, model_ids=None, groups=None):

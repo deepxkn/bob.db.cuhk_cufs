@@ -17,11 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Commands the CASIA NIR-VIS 2.0 database can respond to.
+"""
+Commands the CUHK-CUFS database can respond to.
 """
 
 import os
 import sys
+
 from bob.db.base.driver import Interface as BaseInterface
 
 def dumplist(args):
@@ -74,29 +76,40 @@ def checkfiles(args):
 
   return 0
 
+
 class Interface(BaseInterface):
 
   def name(self):
-    return 'voxforge'
+    return 'cuhk'
 
   def version(self):
-    import pkg_resources # part of setuptools
+    import pkg_resources  # part of setuptools
     return pkg_resources.require('bob.db.%s' % self.name())[0].version
 
   def files(self):
-    return ()
+
+    from pkg_resources import resource_filename
+    raw_files = ('db.sql3',)
+    return [resource_filename(__name__, k) for k in raw_files]
 
   def type(self):
-    return 'text'
+    return 'sqlite'
+
 
   def add_commands(self, parser):
 
     from . import __doc__ as docs
 
     subparsers = self.setup_parser(parser,
-        "Voxforge database", docs)
+      "CUHK-CUFS database", docs)
 
     import argparse
+    from .query import Database
+    db = Database()
+
+    # example: get the "create" action from a submodule
+    from .create import add_command as create_command
+    create_command(subparsers)
 
     # the "dumplist" action
     parser = subparsers.add_parser('dumplist', help=dumplist.__doc__)

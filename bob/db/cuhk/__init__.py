@@ -23,7 +23,7 @@ http://www.voxforge.org/
 """
 
 from .query import Database
-from bob.db.verification.filelist.models import File, Client
+from bob.db.cuhk.models import File, Client, Annotation
 
 def get_config():
   """Returns a string containing the configuration information.

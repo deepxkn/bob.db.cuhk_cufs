@@ -37,7 +37,9 @@ setup(
 
     install_requires=[
       'setuptools',
-      'bob.db.verification.filelist',
+      'bob.db.xm2vts',
+      'bob.db.arface',
+      'bob.db.verification.utils' 
     ],
 
     namespace_packages = [
