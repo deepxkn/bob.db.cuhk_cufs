@@ -75,7 +75,7 @@ class Client(Base):
     self.original_database = original_database
 
   def __repr__(self):
-    return "<Client('%d', '%s', '%s')>" % self.id, self.original_database, self.original_id
+    return "<Client({0}, {1}, {2})>".format(self.id, self.original_database, self.original_id)
 
 
 class File(Base, bob.db.verification.utils.File):
@@ -89,20 +89,33 @@ class File(Base, bob.db.verification.utils.File):
 
   modality_choices = ('photo', 'sketch')
 
-  id        = Column(String(100), primary_key=True)
+  id        = Column(String(100), primary_key=True, autoincrement=True)
   path      = Column(String(100), unique=True)
   client_id = Column(Integer, ForeignKey('client.id'))
   modality  = Column(Enum(*modality_choices))
 
   # a back-reference from the client class to a list of files
   client      = relationship("Client", backref=backref("file", order_by=id))
-  annotations = relationship("Annotation", backref=backref("file"), uselist=True)
+  all_annotations = relationship("Annotation", backref=backref("file"), uselist=True)
 
-  def __init__(self, id, image_name, client_id):
+  def __init__(self, id, image_name, client_id, modality):
     # call base class constructor
     bob.db.verification.utils.File.__init__(self, file_id = id, client_id = client_id, path = image_name)
-    
+    #bob.db.verification.utils.File.__init__(self, client_id = client_id, path = image_name)
+    self.modality = modality
 
+  def annotations(self, annotation_type="eyes_center"):
+    if annotation_type=="eyes_center":
+      return {'reye' : (self.all_annotations[16].y, self.all_annotations[16].x), 'leye' : (self.all_annotations[18].y, self.all_annotations[18].x) }
+    else:      
+      data = {}
+      for i in range(len(self.all_annotations)):
+        a = self.all_annotations[i]
+        data[i] = (a.y, a.x)
+ 
+      return data
+
+    
 
 class Annotation(Base):
   """
@@ -121,8 +134,8 @@ class Annotation(Base):
   x = Column(Integer, primary_key=True)
   y = Column(Integer, primary_key=True)  
 
-  def __init__(self, annotation, x,y):
-    self.annotation = annotation
+  def __init__(self, file_id, x,y):
+    self.file_id = file_id
     self.x          = x
     self.y          = y
 

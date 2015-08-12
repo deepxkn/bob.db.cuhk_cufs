@@ -29,11 +29,10 @@ from utils import ARFACEWrapper, XM2VTSWrapper, CUHKWrapper
 def add_clients(session, verbose = True):
 
   """Adds the clients and split up the groups 'world', 'dev', and 'eval'"""
-
-  #import ipdb; ipdb.set_trace();
    
   #Adding the clients from ARFACE
-  arface_clients = ARFACEWrapper.get_clients()
+  arface = ARFACEWrapper()
+  arface_clients = arface.get_clients()
 
   if verbose>=1: print('Adding ARFACE clients to the database ...')
     
@@ -45,7 +44,7 @@ def add_clients(session, verbose = True):
  
     if verbose>=1: print("  Adding client {0}".format(original_client_id))   
     session.add(Client(id=id, 
-                       gender=ARFACEWrapper.get_gender_from_client_id(original_client_id),
+                       gender = arface.get_gender_from_client_id(original_client_id),
                        original_id = original_client_id,
                        original_database = "arface"
                        ))
@@ -53,7 +52,8 @@ def add_clients(session, verbose = True):
 
 
   #Adding the clients from XM2VTS
-  xm2vts_clients = XM2VTSWrapper.get_clients()
+  xm2vts = XM2VTSWrapper()
+  xm2vts_clients = xm2vts.get_clients()
 
   if verbose>=1: print('Adding XM2VTS clients to the database ...')
     
@@ -64,7 +64,7 @@ def add_clients(session, verbose = True):
  
     if verbose>=1: print("  Adding client {0}".format(original_client_id))   
     session.add(Client(id=id_offset, 
-                       gender=XM2VTSWrapper.get_gender(),
+                       gender=xm2vts.get_gender(),
                        original_id = original_client_id,
                        original_database = "xm2vts"
                        ))
@@ -72,7 +72,8 @@ def add_clients(session, verbose = True):
 
 
   #Adding the clients from CUHK
-  cuhk_clients = CUHKWrapper.get_clients()
+  cuhk         = CUHKWrapper()
+  cuhk_clients = cuhk.get_clients()
 
   if verbose>=1: print('Adding CUHK clients to the database ...')
     
@@ -83,7 +84,7 @@ def add_clients(session, verbose = True):
  
     if verbose>=1: print("  Adding client {0}".format(original_client_id))   
     session.add(Client(id=id_offset, 
-                       gender=CUHKWrapper.get_gender_from_client_id(original_client_id),
+                       gender=cuhk.get_gender_from_client_id(original_client_id),
                        original_id = original_client_id,
                        original_database = "cuhk"
                        ))
@@ -95,17 +96,96 @@ def add_clients(session, verbose = True):
 
 
 
-
-def add_files(session, directory, annotations_file, verbose):
+def add_files(session, verbose):
   """
   Adds files with their respective information into the Database
-  :param session: DB session
-  :param directory: directory to the CASME2 directory containing the folders of subjects.
-  :param annotations_file: annotations for the dataset file path
-  :param verbose: whether or not to show some information on CLI
   """
-  return None
+  if verbose>=1: print('Adding ARFACE files to the database ...')
+  if verbose>=1: print('Adding PHOTOS ...')
+  
+  arface = ARFACEWrapper()
+  files = arface.get_files_from_modality(modality='photo')
+  id_offset = 1 #ID
+  for f in files:
+    if verbose>=1: print("  Adding file {0}".format(f.path))
+    f.id = id_offset
+    id_offset+=1
+    session.add(f)
 
+
+  if verbose>=1: print('Adding SKETCHES ...') 
+  files = arface.get_files_from_modality(modality='sketches')    
+  for f in files:
+    if verbose>=1: print("  Adding file {0}".format(f.path))
+    f.id = id_offset
+    id_offset+=1
+    session.add(f)
+
+  del arface
+
+  ########
+
+  if verbose>=1: print('Adding XM2VTS files to the database ...')
+  if verbose>=1: print('Adding PHOTOS ...')
+ 
+  xm2vts = XM2VTSWrapper()
+  files = xm2vts.get_files_from_modality(modality='photo')
+  for f in files:
+    if verbose>=1: print("  Adding file {0}".format(f.path))
+    f.id = id_offset
+    id_offset+=1
+    session.add(f)
+
+
+  if verbose>=1: print('Adding SKETCHES ...') 
+  files = xm2vts.get_files_from_modality(modality='sketches')    
+  for f in files:
+    if verbose>=1: print("  Adding file {0}".format(f.path))
+    f.id = id_offset
+    id_offset+=1
+    session.add(f)
+
+  #######
+
+  if verbose>=1: print('Adding CUHK files to the database ...')
+ 
+  cuhk = CUHKWrapper()
+  files = cuhk.get_files()
+  for f in files:
+    if verbose>=1: print("  Adding file {0}".format(f.path))
+    f.id = id_offset
+    id_offset+=1
+    session.add(f)
+
+
+  
+  session.commit()
+
+
+def add_annotations(session, annotation_dir, verbose):
+  """
+  Adds the annotations 
+  """
+
+  if verbose>=1: print('Adding ARFACE Annotations to the database ...')
+  arface = ARFACEWrapper()
+  annotations = arface.get_annotations(annotation_dir, annotation_extension='.dat')
+  for a in annotations:
+    session.add(a)
+
+  if verbose>=1: print('Adding XM2VTS Annotations to the database ...')
+  xm2vts = XM2VTSWrapper()
+  annotations = xm2vts.get_annotations(annotation_dir, annotation_extension='.dat')
+  for a in annotations:
+    session.add(a)
+
+  if verbose>=1: print('Adding CUHK Annotations to the database ...')
+  cuhk = CUHKWrapper()
+  annotations = cuhk.get_annotations(annotation_dir, annotation_extension='.dat')
+  for a in annotations:
+    session.add(a)
+
+  session.commit()   
 
 
 def create_tables(args):
@@ -141,7 +221,9 @@ def create(args):
   create_tables(args)
   s = session_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2))
   add_clients(s, args.verbose)
-  #add_files(s, args.directory, args.annotdir, args.verbose)
+  add_files(s, args.verbose)
+  add_annotations(s, args.annotation_dir, args.verbose)
+
   #add_protocols(s, args.verbose)
   #add_clientxprotocols(s, args.verbose)
   s.commit()
@@ -152,10 +234,8 @@ def add_command(subparsers):
 
   parser = subparsers.add_parser('create', help=create.__doc__)
 
-  parser.add_argument('-R', '--recreate', action='store_true', help='If set, I\'ll first erase the current database')
-  parser.add_argument('-v', '--verbose', action='count', help='Do SQL operations in a verbose way?')
-  parser.add_argument('-D', '--directory', metavar='DIR', default='../CASME2/Cropped/', help='The path to the directory containing the subjects folders, which have the frames')
-  parser.add_argument('--extension', metavar='STR', default='.jpg', help='The file extension of the image files from the CASME2 database')
-  parser.add_argument('-A', '--annotdir', metavar='DIR', default='bob/db/casme2/annotations.csv', help="Change the relative path to the directory containing the action_unit information file of the CASME2 database (defaults to %(default)s)")
+  parser.add_argument('-r', '--recreate', action='store_true', help='If set, I\'ll first erase the current database')
+  parser.add_argument('-v', '--verbose', action='count', help='Increase verbosity?')
+  parser.add_argument('-a', '--annotation-dir', default='.',  help="The annotation directory. HAS TO BE THE SAME STRUCTURE AS PROVIDED BY THE DATABASE PROVIDERS (defaults to %(default)s)")
 
   parser.set_defaults(func=create) #action
