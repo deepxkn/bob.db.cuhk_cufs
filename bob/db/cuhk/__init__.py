@@ -18,12 +18,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Details about the Voxforge database can be found here:
-http://www.voxforge.org/
 """
 
 from .query import Database
-from bob.db.cuhk.models import File, Client, Annotation
+from bob.db.cuhk.models import File, Client, Annotation, Protocol_File_Association
 
 def get_config():
   """Returns a string containing the configuration information.

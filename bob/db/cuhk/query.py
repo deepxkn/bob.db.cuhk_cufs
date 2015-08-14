@@ -21,6 +21,8 @@ import os
 import six
 from bob.db.base import utils
 from .models import *
+from .models import PROTOCOLS, GROUPS, PURPOSES
+
 from .driver import Interface
 
 import bob.db.verification.utils
@@ -40,19 +42,67 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
 
 
   def objects(self, groups = None, protocol = None, purposes = None, model_ids = None, **kwargs):
-    """This function returns lists of File objects, which fulfill the given restrictions."""
+    """
+      This function returns lists of File objects, which fulfill the given restrictions.
 
+    """
 
-  def model_ids(self, protocol=None, groups=None, gender=None):
-    return []
+    #Checking inputs
+    groups    = self.check_parameters_for_validity(groups, "group", GROUPS)
+    protocols = self.check_parameters_for_validity(protocol, "protocol", PROTOCOLS) 
+    purposes  = self.check_parameters_for_validity(purposes, "purpose", PURPOSES)
+
+    #You need to select only one protocol
+    if (len(protocols) > 1):
+      raise ValueError("Please, select only one of the following protocols {0}".format(protocols))
+ 
+    #Querying
+    query = self.query(bob.db.cuhk.File).join(bob.db.cuhk.Protocol_File_Association).join(bob.db.cuhk.Client)
+
+    #filtering
+    query = query.filter(bob.db.cuhk.Protocol_File_Association.group.in_(groups))
+    query = query.filter(bob.db.cuhk.Protocol_File_Association.protocol.in_(protocols))
+    query = query.filter(bob.db.cuhk.Protocol_File_Association.purpose.in_(purposes))
+
+    if model_ids is not None:     
+     if type(model_ids) is not list and type(model_ids) is not tuple:
+       model_ids = [model_ids]
+
+     query = query.filter(bob.db.cuhk.Client.id.in_(model_ids))
+
+    return query.all()
+    
+
+  def model_ids(self, protocol=None, groups=None):
+
+    #Checking inputs
+    groups    = self.check_parameters_for_validity(groups, "group", GROUPS)
+    protocols = self.check_parameters_for_validity(protocol, "protocol", PROTOCOLS) 
+
+    #You need to select only one protocol
+    if (len(protocols) > 1):
+      raise ValueError("Please, select only one of the following protocols {0}".format(protocols))
+ 
+    #Querying
+    query = self.query(bob.db.cuhk.Client).join(bob.db.cuhk.File).join(bob.db.cuhk.Protocol_File_Association)
+
+    #filtering
+    query = query.filter(bob.db.cuhk.Protocol_File_Association.group.in_(groups))
+    query = query.filter(bob.db.cuhk.Protocol_File_Association.protocol.in_(protocols))
+
+    return query.all()
 
 
   def groups(self, protocol = None, **kwargs):
     """This function returns the list of groups for this database."""
+    return GROUPS
+
 
 
   def tmodel_ids(self, groups = None, protocol = None, **kwargs):
     """This function returns the ids of the T-Norm models of the given groups for the given protocol."""
+
+    return []
 
 
   def tobjects(self, protocol=None, model_ids=None, groups=None):

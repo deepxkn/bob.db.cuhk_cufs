@@ -38,19 +38,35 @@ import os
 Base = declarative_base()
 
 """ Defining protocols. Yes, they are static """
-PROTOCOLS = ('cuhk', 'arface', 'xm2vts', 'all-mixed', 'cuhk-arface-xm2vts', 'cuhk-xm2vts-arface',
-  'arface-cuhk-xm2vts', 'arface-xm2vts-cuhk', 'xm2vts-cuhk-arface', 'xm2vts-arface-cuhk')
+PROTOCOLS = ('cuhk_p2s', 'arface_p2s', 'xm2vts_p2s', 'all-mixed_p2s', 'cuhk-arface-xm2vts_p2s', 'cuhk-xm2vts-arface_p2s',
+  'arface-cuhk-xm2vts_p2s', 'arface-xm2vts-cuhk_p2s', 'xm2vts-cuhk-arface_p2s', 'xm2vts-arface-cuhk_p2s',
+  'cuhk_s2p', 'arface_s2p', 'xm2vts_s2p', 'all-mixed_s2p', 'cuhk-arface-xm2vts_s2p', 'cuhk-xm2vts-arface_s2p',
+  'arface-cuhk-xm2vts_s2p', 'arface-xm2vts-cuhk_s2p', 'xm2vts-cuhk-arface_s2p', 'xm2vts-arface-cuhk_s2p')
+
 
 GROUPS    = ('world', 'dev', 'eval')
 
 PURPOSES   = ('train', 'enrol', 'probe')
 
 
-protocolPurpose_file_association = Table('protocol_file_association', Base.metadata,
-  Column('protocol', Enum(*PROTOCOLS), primary_key=True),
-  Column('group', Enum(*GROUPS), primary_key=True),
-  Column('purpose', Enum(*PURPOSES), primary_key=True),
-  Column('file_id',  Integer, ForeignKey('file.id'), primary_key=True))
+class Protocol_File_Association(Base):
+  """
+  Describe the protocols
+  """
+  __tablename__ = 'protocol_file_association'
+
+  protocol = Column('protocol', Enum(*PROTOCOLS), primary_key=True)
+  group    = Column('group', Enum(*GROUPS), primary_key=True)
+  purpose  = Column('purpose', Enum(*PURPOSES), primary_key=True)
+  file_id  = Column('file_id',  Integer, ForeignKey('file.id'), primary_key=True)
+
+  def __init__(self, protocol, group, purpose, file_id):
+    self.protocol = protocol
+    self.group    = group
+    self.purpose  = purpose
+    self.file_id  = file_id
+
+
 
 class Client(Base):
   """
@@ -95,7 +111,7 @@ class File(Base, bob.db.verification.utils.File):
   modality  = Column(Enum(*modality_choices))
 
   # a back-reference from the client class to a list of files
-  client      = relationship("Client", backref=backref("file", order_by=id))
+  client      = relationship("Client", backref=backref("files", order_by=id))
   all_annotations = relationship("Annotation", backref=backref("file"), uselist=True)
 
   def __init__(self, id, image_name, client_id, modality):
