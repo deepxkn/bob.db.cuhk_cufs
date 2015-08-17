@@ -36,7 +36,7 @@ The package is available in two different distribution formats:
 1. You can download it from `PyPI <http://pypi.python.org/pypi>`_, or
 
 2. You can download it in its source form from `its git repository
-   <https://github.com/bioidiap/bob.db.cuhk>`_.
+   <https://github.com/bioidiap/bob.db.cuhk_cufs>`_.
 
 You can mix and match points 1/2 and a/b above based on your requirements. Here
 are some examples:
@@ -51,11 +51,11 @@ script)::
 
     install_requires=[
       ...
-      "bob.db.cuhk",
+      "bob.db.cuhk_cufs",
     ],
 
 Proceed normally with your ``boostrap/buildout`` steps and you should be all
-set. That means you can now import the ``bob.db.cuhk`` namespace into your scripts.
+set. That means you can now import the ``bob.db.cuhk_cufs`` namespace into your scripts.
 
 Modify your buildout.cfg and download from git
 ==============================================
@@ -69,8 +69,8 @@ lines::
   ...
   extensions = mr.developer
   auto-checkout = *
-  eggs = bob.db.cuhk
+  eggs = bob.db.cuhk_cufs
 
   [sources]
-  bob.db.cuhk = git https://github.com/bioidiap/bob.db.cuhk.git
+  bob.db.cuhk_cufs = git https://github.com/bioidiap/bob.db.cuhk_cufs.git
   ...
