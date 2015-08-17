@@ -21,7 +21,7 @@
 """
 
 from .query import Database
-from bob.db.cuhk.models import File, Client, Annotation, Protocol_File_Association
+from bob.db.cuhk_cufs.models import File, Client, Annotation, Protocol_File_Association
 
 def get_config():
   """Returns a string containing the configuration information.

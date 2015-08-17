@@ -422,7 +422,7 @@ def insert_protocol_data(session, protocol, group, purpose, file_objects, photo2
           purpose = "enroll"
 
     
-    session.add(bob.db.cuhk.Protocol_File_Association(
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
        protocol, group, purpose, f.id))
  
 

@@ -80,7 +80,7 @@ def checkfiles(args):
 class Interface(BaseInterface):
 
   def name(self):
-    return 'cuhk'
+    return 'cuhk_cufs'
 
   def version(self):
     import pkg_resources  # part of setuptools

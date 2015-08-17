@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 setup(
 
-    name='bob.db.cuhk',
+    name='bob.db.cuhk_cufs',
     version='0.0.0a1',
     description='CUHK Face Sketch Database (CUFS)',
     url='',
@@ -50,7 +50,7 @@ setup(
     entry_points = {
       # declare database to bob
       'bob.db': [
-        'cuhk = bob.db.cuhk.driver:Interface',
+        'cuhk_cufs = bob.db.cuhk_cufs.driver:Interface',
       ],
     },
 

@@ -31,7 +31,7 @@ SQLITE_FILE = Interface().files()[0]
 
 class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.utils.ZTDatabase):
 
-  """Wrapper class for the CUHK-CUFS database for Heterogeneous face recognition recognition (http://mmlab.ie.cuhk.edu.hk/archive/facesketch.html).
+  """Wrapper class for the CUHK-CUFS database for Heterogeneous face recognition recognition (http://mmlab.ie.cuhk_cufs.edu.hk/archive/facesketch.html).
 
   """
 
@@ -64,18 +64,18 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
       raise ValueError("Please, select only one of the following protocols {0}".format(protocols))
  
     #Querying
-    query = self.query(bob.db.cuhk.File, bob.db.cuhk.Protocol_File_Association).join(bob.db.cuhk.Protocol_File_Association).join(bob.db.cuhk.Client)
+    query = self.query(bob.db.cuhk_cufs.File, bob.db.cuhk_cufs.Protocol_File_Association).join(bob.db.cuhk_cufs.Protocol_File_Association).join(bob.db.cuhk_cufs.Client)
 
     #filtering
-    query = query.filter(bob.db.cuhk.Protocol_File_Association.group.in_(groups))
-    query = query.filter(bob.db.cuhk.Protocol_File_Association.protocol.in_(protocols))
-    query = query.filter(bob.db.cuhk.Protocol_File_Association.purpose.in_(purposes))
+    query = query.filter(bob.db.cuhk_cufs.Protocol_File_Association.group.in_(groups))
+    query = query.filter(bob.db.cuhk_cufs.Protocol_File_Association.protocol.in_(protocols))
+    query = query.filter(bob.db.cuhk_cufs.Protocol_File_Association.purpose.in_(purposes))
 
     if model_ids is not None:     
      if type(model_ids) is not list and type(model_ids) is not tuple:
        model_ids = [model_ids]
 
-     query = query.filter(bob.db.cuhk.Client.id.in_(model_ids))
+     query = query.filter(bob.db.cuhk_cufs.Client.id.in_(model_ids))
 
     raw_files = query.all()
     files     = []
@@ -99,11 +99,11 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
       raise ValueError("Please, select only one of the following protocols {0}".format(protocols))
  
     #Querying
-    query = self.query(bob.db.cuhk.Client).join(bob.db.cuhk.File).join(bob.db.cuhk.Protocol_File_Association)
+    query = self.query(bob.db.cuhk_cufs.Client).join(bob.db.cuhk_cufs.File).join(bob.db.cuhk_cufs.Protocol_File_Association)
 
     #filtering
-    query = query.filter(bob.db.cuhk.Protocol_File_Association.group.in_(groups))
-    query = query.filter(bob.db.cuhk.Protocol_File_Association.protocol.in_(protocols))
+    query = query.filter(bob.db.cuhk_cufs.Protocol_File_Association.group.in_(groups))
+    query = query.filter(bob.db.cuhk_cufs.Protocol_File_Association.protocol.in_(protocols))
 
     return query.all()
 
