@@ -312,7 +312,7 @@ def test08_strings():
         files = db.objects(purposes=u, groups=g, protocol=p)
 
         for f in files:
-          #Checking if the strings are correct
+          #Checking if the strings are correct 
           assert f.purpose  == u
           assert f.protocol == p
           assert f.group    == g
