@@ -40,6 +40,13 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
     bob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File)
     bob.db.verification.utils.ZTDatabase.__init__(self, original_directory=original_directory, original_extension=original_extension)
 
+  
+  def protocols(self):
+    return PROTOCOLS
+
+  def purposes(self):
+    return PURPOSES
+
 
   def objects(self, groups = None, protocol = None, purposes = None, model_ids = None, **kwargs):
     """
@@ -57,7 +64,7 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
       raise ValueError("Please, select only one of the following protocols {0}".format(protocols))
  
     #Querying
-    query = self.query(bob.db.cuhk.File).join(bob.db.cuhk.Protocol_File_Association).join(bob.db.cuhk.Client)
+    query = self.query(bob.db.cuhk.File, bob.db.cuhk.Protocol_File_Association).join(bob.db.cuhk.Protocol_File_Association).join(bob.db.cuhk.Client)
 
     #filtering
     query = query.filter(bob.db.cuhk.Protocol_File_Association.group.in_(groups))
@@ -70,7 +77,15 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
 
      query = query.filter(bob.db.cuhk.Client.id.in_(model_ids))
 
-    return query.all()
+    raw_files = query.all()
+    files     = []
+    for f in raw_files:
+      f[0].group    = f[1].group
+      f[0].purpose  = f[1].purpose
+      f[0].protocol = f[1].protocol
+      files.append(f[0])
+
+    return files
     
 
   def model_ids(self, protocol=None, groups=None):

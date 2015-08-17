@@ -208,15 +208,6 @@ def add_protocols(session, verbose, photo2sketch=True):
 
   """
 
-  PROTOCOLS = ('cuhk_p2s', 'arface_p2s', 'xm2vts_p2s', 'all-mixed_p2s', 'cuhk-arface-xm2vts_p2s', 'cuhk-xm2vts-arface_p2s',
-  'arface-cuhk-xm2vts_p2s', 'arface-xm2vts-cuhk_p2s', 'xm2vts-cuhk-arface_p2s', 'xm2vts-arface-cuhk_p2s',
-  'cuhk_s2p', 'arface_s2p', 'xm2vts_s2p', 'all-mixed_s2p', 'cuhk-arface-xm2vts_s2p', 'cuhk-xm2vts-arface_s2p',
-  'arface-cuhk-xm2vts_s2p', 'arface-xm2vts-cuhk_s2p', 'xm2vts-cuhk-arface_s2p', 'xm2vts-arface-cuhk_s2p')
-
-  GROUPS    = ('world', 'dev', 'eval')
-
-  PURPOSES   = ('train', 'enrol', 'probe')
-
   arface = ARFACEWrapper()
   xm2vts = XM2VTSWrapper()
   cuhk   = CUHKWrapper()
@@ -417,11 +408,20 @@ def insert_protocol_data(session, protocol, group, purpose, file_objects, photo2
 
   for f in file_objects:
     if purpose!="train":
-      if photo2sketch and f.modality=="photo":
-        purpose = "enrol"
+      if photo2sketch:
+
+        if f.modality=="photo":
+          purpose = "enroll"
+        else:
+          purpose = "probe"
+
       else:
-        purpose = "probe"
-     
+        if f.modality=="photo":
+          purpose = "probe"
+        else:
+          purpose = "enroll"
+
+    
     session.add(bob.db.cuhk.Protocol_File_Association(
        protocol, group, purpose, f.id))
  

@@ -109,12 +109,15 @@ class ARFACEWrapper():
 
       #Reading the annotation file
       original_annotations = read_annotations(path)
+      index = 0
       for a in original_annotations:
         
         annotations.append(bob.db.cuhk.Annotation(o.id, 
                                                   a[0],
-                                                  a[1]
+                                                  a[1],
+                                                  index = index
                                                  ))
+        index += 1
     return annotations
 
 
@@ -292,7 +295,7 @@ class XM2VTSWrapper():
     files = []    
     for c in clients:
       cuhk_files = cuhk.query(bob.db.cuhk.File).join(bob.db.cuhk.Client).filter(bob.db.cuhk.Client.original_id==c.id)
-      print "{0} = {1}".format(c.id, cuhk_files.count())
+      #print "{0} = {1}".format(c.id, cuhk_files.count())
       for f in cuhk_files:
         files.append(f)
 
@@ -314,18 +317,20 @@ class XM2VTSWrapper():
       if(o.modality=="sketch"):
         path = os.path.join(annotation_dir, o.path) + annotation_extension
       else:
-        #import ipdb; ipdb.set_trace();
         file_name = o.path.split("/")[2] #THE ORIGINAL XM2VTS RELATIVE PATH IS: XXX\XXX\XXX
         path = os.path.join(annotation_dir,"xm2vts", "photo", file_name) + "_f02" +  annotation_extension #FOR SOME REASON THE AUTHORS SET THIS '_f02 IN THE END OF THE FILE'
 
       #Reading the annotation file
       original_annotations = read_annotations(path)
+      index = 0
       for a in original_annotations:
         
         annotations.append(bob.db.cuhk.Annotation(o.id, 
                                                   a[0],
-                                                  a[1]
+                                                  a[1],
+                                                  index = index
                                                  ))
+        index += 1
     return annotations
 
 
@@ -442,11 +447,15 @@ class CUHKWrapper():
 
       #Reading the annotation file
       original_annotations = read_annotations(path)
+      index = 0
       for a in original_annotations:
         annotations.append(bob.db.cuhk.Annotation(o.id, 
                                                   a[0],
-                                                  a[1]
+                                                  a[1],
+                                                  index = index
                                                  ))
+        index += 1
+ 
     return annotations
 
 

@@ -46,7 +46,7 @@ PROTOCOLS = ('cuhk_p2s', 'arface_p2s', 'xm2vts_p2s', 'all-mixed_p2s', 'cuhk-arfa
 
 GROUPS    = ('world', 'dev', 'eval')
 
-PURPOSES   = ('train', 'enrol', 'probe')
+PURPOSES   = ('train', 'enroll', 'probe')
 
 
 class Protocol_File_Association(Base):
@@ -94,6 +94,36 @@ class Client(Base):
     return "<Client({0}, {1}, {2})>".format(self.id, self.original_database, self.original_id)
 
 
+class Annotation(Base):
+  """
+  The CUHK-CUFS provides 35 coordinates.
+  To model this coordinates this table was built.
+  The columns are the following:
+
+    - Annotation.id
+    - x
+    - y
+
+  """  
+  __tablename__ = 'annotation'
+
+  file_id = Column(Integer, ForeignKey('file.id'), primary_key=True)
+  x     = Column(Integer, primary_key=True)
+  y     = Column(Integer, primary_key=True)  
+  index = Column(Integer) 
+
+  def __init__(self, file_id, x,y, index=0):
+    self.file_id = file_id
+    self.x          = x
+    self.y          = y
+    self.index      = index
+
+
+  def __repr__(self):
+    return "<Annotation(file_id:{0}, index:{1}, y={2}, x={3})>".format(self.file_id, self.index, self.y, self.x)
+
+
+
 class File(Base, bob.db.verification.utils.File):
   """
   Information about the files of the CUHK-CUFS database.
@@ -112,7 +142,7 @@ class File(Base, bob.db.verification.utils.File):
 
   # a back-reference from the client class to a list of files
   client      = relationship("Client", backref=backref("files", order_by=id))
-  all_annotations = relationship("Annotation", backref=backref("file"), uselist=True)
+  all_annotations = relationship("Annotation", backref=backref("file"), uselist=True, order_by=Annotation.index)
 
   def __init__(self, id, image_name, client_id, modality):
     # call base class constructor
@@ -133,26 +163,5 @@ class File(Base, bob.db.verification.utils.File):
 
     
 
-class Annotation(Base):
-  """
-  The CUHK-CUFS provides 35 coordinates.
-  To model this coordinates this table was built.
-  The columns are the following:
-
-    - Annotation.id
-    - x
-    - y
-
-  """  
-  __tablename__ = 'annotation'
-
-  file_id = Column(Integer, ForeignKey('file.id'), primary_key=True)
-  x = Column(Integer, primary_key=True)
-  y = Column(Integer, primary_key=True)  
-
-  def __init__(self, file_id, x,y):
-    self.file_id = file_id
-    self.x          = x
-    self.y          = y
 
 
