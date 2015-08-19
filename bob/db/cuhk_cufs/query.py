@@ -64,10 +64,10 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
     # check if directory is set
 
     original_directory = self.original_directory
-    if f.modality=="photo": 
-      if f.client.original_database=="xm2vts":
+    if file.modality=="photo": 
+      if file.client.original_database=="xm2vts":
         original_directory = self.xm2vts
-      elif f.client.original_database=="arface":
+      elif file.client.original_database=="arface":
         original_directory = self.arface         
     
 
