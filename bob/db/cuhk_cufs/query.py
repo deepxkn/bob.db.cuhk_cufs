@@ -35,10 +35,13 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
 
   """
 
-  def __init__(self, original_directory = None, original_extension = None, annotation_directory = None):
+  def __init__(self, original_directory = None, original_extension = None, arface_directory="", xm2vts_directory=""):
     # call base class constructors to open a session to the database
     bob.db.verification.utils.SQLiteDatabase.__init__(self, SQLITE_FILE, File)
     bob.db.verification.utils.ZTDatabase.__init__(self, original_directory=original_directory, original_extension=original_extension)
+
+    self.arface_directory = arface_directory
+    self.xm2vts_directory = xm2vts_directory
 
   
   def protocols(self):
@@ -46,6 +49,35 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
 
   def purposes(self):
     return PURPOSES
+
+
+  def original_file_name(self, file, check_existence = True):
+    """This function returns the original file name for the given File object.
+    Keyword parameters:
+    file : :py:class:`File` or a derivative
+      The File objects for which the file name should be retrieved
+    check_existence : bool
+      Check if the original file exists?
+    Return value : str
+      The original file name for the given File object
+    """
+    # check if directory is set
+
+    original_directory = self.original_directory
+    if f.modality=="photo": 
+      if f.client.original_database=="xm2vts":
+        original_directory = self.xm2vts
+      elif f.client.original_database=="arface":
+        original_directory = self.arface         
+    
+
+    if not original_directory or not self.original_extension:
+      raise ValueError("The original_directory and/or the original_extension were not specified in the constructor.")
+    # extract file name
+    file_name = file.make_path(original_directory, self.original_extension)
+    if not check_existence or os.path.exists(file_name):
+      return file_name
+    raise ValueError("The file '%s' was not found. Please check the original directory '%s' and extension '%s'?" % (file_name, original_directory, self.original_extension))
 
 
   def objects(self, groups = None, protocol = None, purposes = None, model_ids = None, **kwargs):
