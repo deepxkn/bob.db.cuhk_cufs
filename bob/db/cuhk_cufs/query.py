@@ -57,12 +57,12 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
     file : :py:class:`File` or a derivative
       The File objects for which the file name should be retrieved
     check_existence : bool
-      Check if the original file exists?
+      Check if the original file exists? IGNORED: ALWAYS CHECK
     Return value : str
       The original file name for the given File object
     """
-    # check if directory is set
 
+    # check if directory is set
     original_directory = self.original_directory
     if file.modality=="photo": 
       if file.client.original_database=="xm2vts":
@@ -73,21 +73,20 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
 
     if not original_directory or not self.original_extension:
       raise ValueError("The original_directory and/or the original_extension were not specified in the constructor.")
+
     # extract file name
-    #file_name = file.make_path(original_directory, self.original_extension)
     file_name=""
-    if check_existence:   
-      if type(self.original_extension) is list:
-        for e in self.original_extension:
-          file_name = file.make_path(original_directory, e)
-          if os.path.exists(file_name):
-            return file_name
-      else:
-        file_name = file.make_path(original_directory, self.original_extension)
+    if type(self.original_extension) is list:
+      for e in self.original_extension:
+        file_name = file.make_path(original_directory, e)
         if os.path.exists(file_name):
-          return file_name      
+          return file_name
+    else:
+      file_name = file.make_path(original_directory, self.original_extension)
+      if os.path.exists(file_name):
+        return file_name      
     
-      raise ValueError("The file '%s' was not found. Please check the original directory '%s' and extension '%s'?" % (file_name, original_directory, self.original_extension))
+    raise ValueError("The file '%s' was not found. Please check the original directory '%s' and extension '%s'?" % (file_name, original_directory, self.original_extension))
 
 
   def objects(self, groups = None, protocol = None, purposes = None, model_ids = None, **kwargs):
