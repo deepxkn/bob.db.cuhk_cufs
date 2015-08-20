@@ -89,6 +89,18 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
     raise ValueError("The file '%s' was not found. Please check the original directory '%s' and extension '%s'?" % (file_name, original_directory, self.original_extension))
 
 
+  def annotations(self, file, annotation_type="eyes_center"):
+    """This function returns the annotations for the given file id as a dictionary.
+    Keyword parameters:
+    file : :py:class:`bob.db.verification.utils.File` or one of its derivatives
+      The File object you want to retrieve the annotations for,
+    Return value:
+      A dictionary of annotations, for face images usually something like {'leye':(le_y,le_x), 'reye':(re_y,re_x), ...},
+      or None if there are no annotations for the given file ID (which is the case in this base class implementation).
+    """    
+    return file.annotations(annotation_type=annotation_type)
+
+
   def objects(self, groups = None, protocol = None, purposes = None, model_ids = None, **kwargs):
     """
       This function returns lists of File objects, which fulfill the given restrictions.
