@@ -66,9 +66,9 @@ class Database(bob.db.verification.utils.SQLiteDatabase, bob.db.verification.uti
     original_directory = self.original_directory
     if file.modality=="photo": 
       if file.client.original_database=="xm2vts":
-        original_directory = self.xm2vts
+        original_directory = self.xm2vts_directory
       elif file.client.original_database=="arface":
-        original_directory = self.arface         
+        original_directory = self.arface_directory 
     
 
     if not original_directory or not self.original_extension:
