@@ -55,16 +55,16 @@ def test01_protocols_purposes_groups():
 
 def test02_all_files_protocols():
 
-  cuhk = 376
-  arface = 246 
-  xm2vts = 590
-  all_mixed = 1212
-  cuhk_arface_xm2vts = 408
-  cuhk_xm2vts_arface = 404
-  arface_cuhk_xm2vts = 378
-  arface_xm2vts_cuhk = 378
-  xm2vts_cuhk_arface = 426
-  xm2vts_arface_cuhk = 430
+  cuhk = 6648
+  arface = 3288 
+  xm2vts = 16078
+  all_mixed = 68924
+  cuhk_arface_xm2vts = 9800
+  cuhk_xm2vts_arface = 9542
+  arface_cuhk_xm2vts = 11290
+  arface_xm2vts_cuhk = 11226
+  xm2vts_cuhk_arface = 4988
+  xm2vts_arface_cuhk = 5182
    
   assert len(bob.db.cuhk_cufs.Database().objects(protocol="cuhk_p2s")) == cuhk
   assert len(bob.db.cuhk_cufs.Database().objects(protocol="cuhk_s2p")) == cuhk
@@ -92,6 +92,9 @@ def test02_all_files_protocols():
 
   assert len(bob.db.cuhk_cufs.Database().objects(protocol="xm2vts-cuhk-arface_p2s")) == xm2vts_cuhk_arface
   assert len(bob.db.cuhk_cufs.Database().objects(protocol="xm2vts-cuhk-arface_s2p")) == xm2vts_cuhk_arface
+
+  assert len(bob.db.cuhk_cufs.Database().objects(protocol="xm2vts-arface-cuhk_p2s")) == xm2vts_arface_cuhk
+  assert len(bob.db.cuhk_cufs.Database().objects(protocol="xm2vts-arface-cuhk_s2p")) == xm2vts_arface_cuhk
 
 
 def test03_world_files_protocols():
@@ -138,10 +141,10 @@ def test03_world_files_protocols():
 
 def test04_dev_files_protocols():
 
-  cuhk = 112
-  arface = 80 
-  xm2vts = 176
-  all_mixed = 368
+  cuhk = 3192
+  arface = 1640
+  xm2vts = 7832
+  all_mixed = 34040
   cuhk_arface_xm2vts = arface
   cuhk_xm2vts_arface = xm2vts
   arface_cuhk_xm2vts = cuhk
@@ -180,10 +183,10 @@ def test04_dev_files_protocols():
 
 def test05_eval_files_protocols():
 
-  cuhk = 114
-  arface = 78 
-  xm2vts = 178
-  all_mixed = 370
+  cuhk = 3306
+  arface = 1560 
+  xm2vts = 8010
+  all_mixed = 34410
   cuhk_arface_xm2vts = xm2vts
   cuhk_xm2vts_arface = arface
   arface_cuhk_xm2vts = xm2vts

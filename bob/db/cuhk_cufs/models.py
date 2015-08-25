@@ -58,13 +58,16 @@ class Protocol_File_Association(Base):
   protocol = Column('protocol', Enum(*PROTOCOLS), primary_key=True)
   group    = Column('group', Enum(*GROUPS), primary_key=True)
   purpose  = Column('purpose', Enum(*PURPOSES), primary_key=True)
-  file_id  = Column('file_id',  Integer, ForeignKey('file.id'), primary_key=True)
 
-  def __init__(self, protocol, group, purpose, file_id):
-    self.protocol = protocol
-    self.group    = group
-    self.purpose  = purpose
-    self.file_id  = file_id
+  file_id   = Column('file_id',  Integer, ForeignKey('file.id'), primary_key=True)
+  client_id  = Column('client_id',  Integer, ForeignKey('client.id'), primary_key=True)
+
+  def __init__(self, protocol, group, purpose, file_id, client_id):
+    self.protocol  = protocol
+    self.group     = group
+    self.purpose   = purpose
+    self.file_id   = file_id
+    self.client_id = client_id
 
 
 
