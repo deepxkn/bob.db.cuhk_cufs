@@ -38,10 +38,16 @@ import os
 Base = declarative_base()
 
 """ Defining protocols. Yes, they are static """
-PROTOCOLS = ('cuhk_p2s', 'arface_p2s', 'xm2vts_p2s', 'all-mixed_p2s', 'cuhk-arface-xm2vts_p2s', 'cuhk-xm2vts-arface_p2s',
-  'arface-cuhk-xm2vts_p2s', 'arface-xm2vts-cuhk_p2s', 'xm2vts-cuhk-arface_p2s', 'xm2vts-arface-cuhk_p2s',
-  'cuhk_s2p', 'arface_s2p', 'xm2vts_s2p', 'all-mixed_s2p', 'cuhk-arface-xm2vts_s2p', 'cuhk-xm2vts-arface_s2p',
-  'arface-cuhk-xm2vts_s2p', 'arface-xm2vts-cuhk_s2p', 'xm2vts-cuhk-arface_s2p', 'xm2vts-arface-cuhk_s2p')
+#PROTOCOLS = ('cuhk_p2s', 'arface_p2s', 'xm2vts_p2s', 'all-mixed_p2s', 'cuhk-arface-xm2vts_p2s', 'cuhk-xm2vts-arface_p2s',
+#  'arface-cuhk-xm2vts_p2s', 'arface-xm2vts-cuhk_p2s', 'xm2vts-cuhk-arface_p2s', 'xm2vts-arface-cuhk_p2s',
+#  'cuhk_s2p', 'arface_s2p', 'xm2vts_s2p', 'all-mixed_s2p', 'cuhk-arface-xm2vts_s2p', 'cuhk-xm2vts-arface_s2p',
+#  'arface-cuhk-xm2vts_s2p', 'arface-xm2vts-cuhk_s2p', 'xm2vts-cuhk-arface_s2p', 'xm2vts-arface-cuhk_s2p')
+
+PROTOCOLS = ('cuhk_p2s', 'arface_p2s', 'xm2vts_p2s', 'all-mixed_p2s',
+             'cuhk_s2p', 'arface_s2p', 'xm2vts_s2p', 'all-mixed_s2p',
+
+             'search_split1_p2s','search_split2_p2s','search_split3_p2s','search_split4_p2s','search_split5_p2s',
+             'search_split1_s2p','search_split2_s2p','search_split3_s2p','search_split4_s2p','search_split5_s2p')
 
 
 GROUPS    = ('world', 'dev', 'eval')
@@ -60,14 +66,14 @@ class Protocol_File_Association(Base):
   purpose  = Column('purpose', Enum(*PURPOSES), primary_key=True)
 
   file_id   = Column('file_id',  Integer, ForeignKey('file.id'), primary_key=True)
-  client_id  = Column('client_id',  Integer, ForeignKey('client.id'), primary_key=True)
+  #client_id  = Column('client_id',  Integer, ForeignKey('client.id'), primary_key=True)
 
-  def __init__(self, protocol, group, purpose, file_id, client_id):
+  def __init__(self, protocol, group, purpose, file_id):
     self.protocol  = protocol
     self.group     = group
     self.purpose   = purpose
     self.file_id   = file_id
-    self.client_id = client_id
+    #self.client_id = client_id
 
 
 

@@ -25,6 +25,8 @@ import os
 
 from .models import *
 from utils import ARFACEWrapper, XM2VTSWrapper, CUHKWrapper
+import numpy
+numpy.random.seed(10)
 
 def add_clients(session, verbose = True):
 
@@ -102,14 +104,27 @@ def add_files(session, verbose):
   """
   if verbose>=1: print('Adding ARFACE files to the database ...')
   if verbose>=1: print('Adding PHOTOS ...')
+   
+  ############
+  #Amendment: Creating a structure to make easy the protocol creation
+  ############  
+  client_files = {}
+  client_files['arface'] = {}
+  client_files['xm2vts'] = {}
+  client_files['cuhk']   = {}  
   
+  
+
   arface = ARFACEWrapper()
   files = arface.get_files_from_modality(modality='photo')
-  id_offset = 1 #ID
+  id_offset = 1 #ID  
   for f in files:
     if verbose>=1: print("  Adding file {0}".format(f.path))
     f.id = id_offset
     id_offset+=1
+
+    client_files['arface'][f.client_id] = {'photo':f.id}
+    
     session.add(f)
 
 
@@ -119,7 +134,8 @@ def add_files(session, verbose):
     if verbose>=1: print("  Adding file {0}".format(f.path))
     f.id = id_offset
     id_offset+=1
-    session.add(f)
+    session.add(f)    
+    client_files['arface'][f.client_id]['sketch'] = f.id
 
   del arface
 
@@ -134,6 +150,7 @@ def add_files(session, verbose):
     if verbose>=1: print("  Adding file {0}".format(f.path))
     f.id = id_offset
     id_offset+=1
+    client_files['xm2vts'][f.client_id] = {'photo':f.id}
     session.add(f)
 
 
@@ -143,6 +160,7 @@ def add_files(session, verbose):
     if verbose>=1: print("  Adding file {0}".format(f.path))
     f.id = id_offset
     id_offset+=1
+    client_files['xm2vts'][f.client_id]['sketch'] = f.id
     session.add(f)
 
   #######
@@ -155,11 +173,16 @@ def add_files(session, verbose):
     if verbose>=1: print("  Adding file {0}".format(f.path))
     f.id = id_offset
     id_offset+=1
+ 
+    if(not client_files['cuhk'].has_key(f.client_id)):
+      client_files['cuhk'][f.client_id] = {}    
+    client_files['cuhk'][f.client_id][f.modality] = f.id
+    
     session.add(f)
-
-
   
   session.commit()
+  
+  return client_files
 
 
 def add_annotations(session, annotation_dir, verbose):
@@ -189,300 +212,235 @@ def add_annotations(session, annotation_dir, verbose):
 
 
 
-def add_protocols(session, verbose, photo2sketch=True):
+
+def add_search_protocols(session, verbose, clients_files):
   """
-  There are 9 protocols:
- 
-  CUHK   - This covers only images from the CUHK student database
-  ARFACE - This covers only images from the ARFACE  database
-  XM2VTS - This covers only images from the XM2VTS student database
+  Implementing the search protocols based on the paper
   
-  ALL    - It is a mixture of all databases (the training, dev and eval sets of all)
+  Klare, Brendan F., and Anil K. Jain. "Heterogeneous face recognition using kernel prototype similarities." Pattern Analysis and Machine Intelligence, IEEE Transactions on 35.6 (2013): 1410-1422.
 
-  CUHK-ARFACE-XM2VTS: Training set of CUHK, dev set of ARFACE and eval set of XM2VTS
-  CUHK-XM2VTS-ARFACE:
-  ARFACE-CUHK-XM2VTS:
-  ARFACE-XM2VTS-CUHK:
-  XM2VTS-CUHK-ARFACE:
-  XM2VTS-ARFACE-CUHK:
-
+  In this one: 404 clients for training
+               202 clients for testing
   """
-
-  arface = ARFACEWrapper()
-  xm2vts = XM2VTSWrapper()
-  cuhk   = CUHKWrapper()
-
-  if(photo2sketch):
-    suffix = "_p2s"
-  else:
-    suffix = "_s2p"    
-
-  ####### Protocol ARFACE
-
-  if verbose>=1: print('Creating the protocol ARFACE  ...')
-
-  #getting the clients
-  world_clients = arface.get_clients_from_group(group="world")
-  insert_protocol_data(session, "arface"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
   
-  dev_clients   = arface.get_clients_from_group(group="dev")
-  insert_protocol_data(session, "arface"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
- 
-  eval_clients  = arface.get_clients_from_group(group="eval")
-  insert_protocol_data(session, "arface"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
- 
-  session.commit()
-    
-  ############## Protocol XM2VTS
-  if verbose>=1: print('Creating the protocol XM2VTS  ...')
+  protocols = ['search_split1','search_split2','search_split3','search_split4','search_split5']
+  
+  clients = dict(clients_files['arface'].items() + clients_files['xm2vts'].items() + clients_files['cuhk'].items())
+  
+  for p in protocols:
 
-  #getting the files
-  world_clients = xm2vts.get_clients_from_group(group="world")
-  dev_clients   = xm2vts.get_clients_from_group(group="dev")
-  eval_clients  = xm2vts.get_clients_from_group(group="eval")
- 
-  #Inserting in the database
-  insert_protocol_data(session, "xm2vts"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "xm2vts"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "xm2vts"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
+    indexes = clients.keys()
+    numpy.random.shuffle(indexes) #Shufling the indexes
+  
+    world   = indexes[0:404]
+    dev     = indexes[404:404+202]
+  
+    if verbose>=1: print("  Adding protocol {0}".format(p)) 
+  
+    #Adding training set
+    for w in world:
 
-  session.commit()
+      for f in clients[w]:
+      
 
-
-
-  ############## Protocol CUHK
-
-  if verbose>=1: print('Creating the protocol CUHK  ...')
-
-  #getting the files
-  world_clients = cuhk.get_clients_from_group(group="world")
-  dev_clients   = cuhk.get_clients_from_group(group="dev")
-  eval_clients  = cuhk.get_clients_from_group(group="eval")
- 
-  #Inserting in the database
-  insert_protocol_data(session, "cuhk"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "cuhk"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "cuhk"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-  ############# Protocol all-mixed
-
-  if verbose>=1: print('Creating the protocol ALL mixed  ...')
-
-  #getting the files
-  world_clients = arface.get_clients_from_group(group="world") +\
-                xm2vts.get_clients_from_group(group="world") +\
-                cuhk.get_clients_from_group(group="world")
-
-  dev_clients   = arface.get_clients_from_group(group="dev") +\
-                xm2vts.get_clients_from_group(group="dev") +\
-                cuhk.get_clients_from_group(group="dev")
-
-  eval_clients  = arface.get_clients_from_group(group="eval") +\
-                xm2vts.get_clients_from_group(group="eval") +\
-                cuhk.get_clients_from_group(group="eval")
-
- 
-  #Inserting in the database
-  insert_protocol_data(session, "all-mixed"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "all-mixed"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "all-mixed"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-  ############# Protocol cuhk-arface-xm2vts
-
-  if verbose>=1: print('Creating the protocol cuhk-arface-xm2vts  ...')
-
-  #getting the files
-  world_clients = cuhk.get_clients_from_group(group="world")
-  dev_clients   = arface.get_clients_from_group(group="dev")
-  eval_clients  = xm2vts.get_clients_from_group(group="eval")
-
- 
-  #Inserting in the database
-  insert_protocol_data(session, "cuhk-arface-xm2vts"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "cuhk-arface-xm2vts"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "cuhk-arface-xm2vts"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-  ############# Protocol cuhk-xm2vts-arface
-
-  if verbose>=1: print('Creating the protocol cuhk-xm2vts-arface  ...')
-
-  #getting the files
-  world_clients = cuhk.get_clients_from_group(group="world")
-  dev_clients   = xm2vts.get_clients_from_group(group="dev")
-  eval_clients  = arface.get_clients_from_group(group="eval")
-
- 
-  #Inserting in the database
-  insert_protocol_data(session, "cuhk-xm2vts-arface"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "cuhk-xm2vts-arface"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "cuhk-xm2vts-arface"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-  ############# Protocol arface-cuhk-xm2vts 
-
-  if verbose>=1: print('Creating the protocol arface-cuhk-xm2vts  ...')
-
-  #getting the files
-  world_clients = arface.get_clients_from_group(group="world")
-  dev_clients   = cuhk.get_clients_from_group(group="dev")
-  eval_clients  = xm2vts.get_clients_from_group(group="eval")
-
- 
-  #Inserting in the database
-  insert_protocol_data(session, "arface-cuhk-xm2vts"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "arface-cuhk-xm2vts"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "arface-cuhk-xm2vts"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-  ############# Protocol arface-xm2vts-cuhk
-
-  if verbose>=1: print('Creating the protocol arface-xm2vts-cuhk  ...')
-
-  #getting the files
-  world_clients = arface.get_clients_from_group(group="world")
-  dev_clients   = xm2vts.get_clients_from_group(group="dev")
-  eval_clients  = cuhk.get_clients_from_group(group="eval")
-
- 
-  #Inserting in the database
-  insert_protocol_data(session, "arface-xm2vts-cuhk"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "arface-xm2vts-cuhk"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "arface-xm2vts-cuhk"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-  ############# Protocol xm2vts-cuhk-arface
-
-  if verbose>=1: print('Creating the protocol xm2vts-cuhk-arface  ...')
-
-  #getting the files
-  world_clients = xm2vts.get_clients_from_group(group="world")
-  dev_clients   = cuhk.get_clients_from_group(group="dev")
-  eval_clients  = arface.get_clients_from_group(group="eval")
-
- 
-  #Inserting in the database
-  insert_protocol_data(session, "xm2vts-cuhk-arface"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "xm2vts-cuhk-arface"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "xm2vts-cuhk-arface"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-
-  ############# Protocol xm2vts-arface-cuhk
-
-  if verbose>=1: print('Creating the protocol xm2vts-arface-cuhk  ...')
-
-  #getting the files
-  world_clients = xm2vts.get_clients_from_group(group="world")
-  dev_clients   = arface.get_clients_from_group(group="dev")
-  eval_clients  = cuhk.get_clients_from_group(group="eval")
- 
-  #Inserting in the database
-  insert_protocol_data(session, "xm2vts-arface-cuhk"+suffix, "world", "train", world_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "xm2vts-arface-cuhk"+suffix, "dev", "", dev_clients, photo2sketch=photo2sketch)
-  insert_protocol_data(session, "xm2vts-arface-cuhk"+suffix, "eval", "", eval_clients, photo2sketch=photo2sketch)
-
-  session.commit()
-
-
-
-
-def insert_protocol_data(session, protocol, group, purpose, clients, photo2sketch=True):
-
-  for c in clients:
-    if purpose=="train":
-      #Adding files for training
-      for f in c.files:
+        #ADDING PHOTO -> SKETCH
+        protocol = "{0}_p2s".format(p)
         session.add(bob.db.cuhk_cufs.Protocol_File_Association(
-         protocol, group, purpose, f.id, c.id))
- 
-    else:
-      #PRobing
-      for c1 in clients:
- 
-        #With same clients, you need to define which one is enroll or probe
-        if c1.id==c.id:
-          for f in c1.files:
-            if ((photo2sketch and f.modality=="photo") or
-                (not photo2sketch and f.modality=="sketch")):
+                    protocol,
+                    "world",
+                    "train", 
+                    clients[w][f]))
 
-              purpose="enroll"
-            else: 
-              purpose="probe"
-
-            session.add(bob.db.cuhk_cufs.Protocol_File_Association(
-         protocol, group, purpose, f.id, c.id))
- 
-        else:
-          #With different clients the task is to define which file should be included
-
-          for f in c1.files:          
-            if ((photo2sketch and f.modality=="photo") or
-                (not photo2sketch and f.modality=="sketch")):
-              continue #Excluding files
-            else: 
-              purpose="probe"
-
-            session.add(bob.db.cuhk_cufs.Protocol_File_Association(
-         protocol, group, purpose, f.id, c.id))
+        #ADDING PHOTO <- SKETCH
+        protocol = "{0}_s2p".format(p)        
+        session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                    protocol,
+                    "world",
+                    "train", 
+                    clients[w][f]))
 
 
-  """
-  for f in file_objects:
-    if purpose=="train":
+    #Adding dev set    
+    for d in dev:
+      
+      #ADDING PHOTO -> SKETCH 
+      # ENROLL
+      protocol = "{0}_p2s".format(p)
       session.add(bob.db.cuhk_cufs.Protocol_File_Association(
-       protocol, group, purpose, f.id, f.id)) 
-    else: 
+                  protocol,
+                  "dev",
+                  "enroll", 
+                  clients[d]['photo']))
 
-      #Excluding some files
-      if ((not photo2sketch and f.modality=="photo") or 
-          (photo2sketch and f.modality=="sketch") )
-        continue
+      #ADDING PHOTO -> SKETCH
+      # PROBE
+      session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                    protocol,
+                    "dev",
+                    "probe", 
+                    clients[d]['sketch']))
 
-      #probing
-      for f1 in file_objects:
 
-        #Same client
-        if f1.client_id == f.client_id:
-          if photo2sketch:
-            if f.modality=="photo":
-              purpose = "enroll"
-            else:
-              purpose = "probe"
 
-          else:
-            if f.modality=="photo":
-              purpose = "probe"
-            else:
-              purpose = "enroll"
+      #ADDING PHOTO <- SKETCH 
+      # ENROLL
+      protocol = "{0}_s2p".format(p)
+      session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                  protocol,
+                  "dev",
+                  "enroll", 
+                  clients[d]['sketch']))
 
-        else:#Different client
+      #ADDING PHOTO <- SKETCH
+      # PROBE
+      session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                    protocol,
+                    "dev",
+                    "probe", 
+                    clients[d]['photo']))
 
-          if ((photo2sketch and f1.modality=="sketch") or 
-             (not photo2sketch and f1.modality=="photo")):
-            purpose = "probe"
-          else:
-             continue
-    
-        session.add(bob.db.cuhk_cufs.Protocol_File_Association(
-       protocol, group, purpose, f.id, f1.id))
+
+
+
+
+
+def add_verification_protocols(session, verbose, clients, protocol_name, n_train, n_dev, n_test):
   """
+  Implementing verification protocols
+  
+  For the CUHK:    75 clients for training
+                   56 clients for development
+                   57 clients for testing
+   
+  
+  For the XM2VTS:  118 clients for training
+                   88 clients for development
+                   89 clients for testing
+  
+
+  For the ARFACE:  44 clients for training
+                   40 clients for development
+                   39 clients for testing
+
+  
+  """  
+
+
+
+  indexes = clients.keys()
+  numpy.random.shuffle(indexes) #Shufling the indexes
+  
+  world    = indexes[0:n_train]
+  dev      = indexes[n_train:n_train+n_dev]
+  eval_set = indexes[n_train+n_dev:n_train+n_dev+n_test]
+  
+  if verbose>=1: print("  Adding protocol {0}".format(protocol_name)) 
+  
+  #Adding training set
+  for w in world:
+
+    for f in clients[w]:
+      
+
+      #ADDING PHOTO -> SKETCH
+      protocol = "{0}_p2s".format(protocol_name)
+      session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                  protocol,
+                  "world",
+                  "train", 
+                  clients[w][f]))
+
+      #ADDING PHOTO <- SKETCH
+      protocol = "{0}_s2p".format(protocol_name)        
+      session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                  protocol,
+                  "world",
+                  "train", 
+                  clients[w][f]))
+
+
+
+  #Adding dev set    
+  for d in dev:
+      
+    #ADDING PHOTO -> SKETCH 
+    # ENROLL
+    protocol = "{0}_p2s".format(protocol_name)
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                protocol,
+                "dev",
+                "enroll", 
+                clients[d]['photo']))
+
+    #ADDING PHOTO -> SKETCH
+    # PROBE
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                    protocol,
+                    "dev",
+                    "probe", 
+                    clients[d]['sketch']))
+
+
+
+    #ADDING PHOTO <- SKETCH 
+    # ENROLL
+    protocol = "{0}_s2p".format(protocol_name)
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                protocol,
+                "dev",
+                "enroll", 
+                clients[d]['sketch']))
+
+    #ADDING PHOTO <- SKETCH
+    # PROBE
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                  protocol,
+                  "dev",
+                  "probe", 
+                  clients[d]['photo']))
+
+
+
+
+  #Adding eval set    
+  for e in eval_set:
+      
+    #ADDING PHOTO -> SKETCH 
+    # ENROLL
+    protocol = "{0}_p2s".format(protocol_name)
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                protocol,
+                "eval",
+                "enroll", 
+                clients[e]['photo']))
+
+    #ADDING PHOTO -> SKETCH
+    # PROBE
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                  protocol,
+                  "eval",
+                  "probe", 
+                  clients[e]['sketch']))
+
+
+
+    #ADDING PHOTO <- SKETCH 
+    # ENROLL
+    protocol = "{0}_s2p".format(protocol_name)
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                protocol,
+                "eval",
+                "enroll", 
+                clients[e]['sketch']))
+
+    #ADDING PHOTO <- SKETCH
+    # PROBE
+    session.add(bob.db.cuhk_cufs.Protocol_File_Association(
+                  protocol,
+                  "eval",
+                  "probe", 
+                  clients[e]['photo']))
+
 
 
 def create_tables(args):
@@ -518,11 +476,39 @@ def create(args):
   create_tables(args)
   s = session_try_nolock(args.type, args.files[0], echo=(args.verbose >= 2))
   add_clients(s, args.verbose)
-  add_files(s, args.verbose)
+  client_files = add_files(s, args.verbose)
+  
   add_annotations(s, args.annotation_dir, args.verbose)
 
-  add_protocols(s, args.verbose,photo2sketch=True)
-  add_protocols(s, args.verbose,photo2sketch=False)
+  add_search_protocols(s, args.verbose, client_files)
+
+  add_verification_protocols(s, args.verbose, 
+                          client_files['arface'], 
+                          protocol_name="arface", 
+                          n_train = 44, 
+                          n_dev   = 40, 
+                          n_test  = 39)
+  
+  add_verification_protocols(s, args.verbose, 
+                          client_files['xm2vts'], 
+                          protocol_name="xm2vts", 
+                          n_train = 118, 
+                          n_dev   = 88, 
+                          n_test  = 89)
+
+  add_verification_protocols(s, args.verbose, 
+                          client_files['cuhk'], 
+                          protocol_name="cuhk", 
+                          n_train = 75, 
+                          n_dev   = 56, 
+                          n_test  = 57)
+
+  add_verification_protocols(s, args.verbose, 
+                          dict(client_files['cuhk'].items() + client_files['arface'].items() + client_files['xm2vts'].items()), 
+                          protocol_name="all-mixed", 
+                          n_train = 237, 
+                          n_dev   = 184, 
+                          n_test  = 185)
 
   s.commit()
   s.close()
