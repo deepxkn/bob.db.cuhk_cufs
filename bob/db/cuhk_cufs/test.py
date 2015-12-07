@@ -74,8 +74,12 @@ def test02_search_files_protocols():
       assert len(bob.db.cuhk_cufs.Database().objects(protocol=p, groups="dev")) == dev
       assert len(bob.db.cuhk_cufs.Database().objects(protocol=p, groups="dev", purposes="enroll")) == dev_enroll
       assert len(bob.db.cuhk_cufs.Database().objects(protocol=p, groups="dev", purposes="probe"))  == dev_probe
-    
+          
       assert len(bob.db.cuhk_cufs.Database().objects(protocol=p, groups="eval")) == 0
+
+  p = "search_split1_p2s"
+  assert len(bob.db.cuhk_cufs.Database().objects(protocol=p, groups="dev", purposes="enroll", model_ids=[5])) == 1
+  assert len(bob.db.cuhk_cufs.Database().objects(protocol=p, groups="dev", purposes="probe", model_ids=[5]))  == dev_probe      
 
 
 
@@ -169,7 +173,32 @@ def test05_verification_cuhk_protocols():
 
 
 
-def test06_strings():
+def test06_search_clients_protocols():
+
+  world      = 404
+  dev        = 202
+      
+  protocols = bob.db.cuhk_cufs.Database().protocols()
+  for p in protocols:
+  
+    if "search" in p:  
+      assert len(bob.db.cuhk_cufs.Database().model_ids(protocol=p, groups="world")) == world
+      assert len(bob.db.cuhk_cufs.Database().model_ids(protocol=p, groups="dev")) == dev
+
+
+def test07_search_tobjects():
+
+  world      = 404
+  protocols = bob.db.cuhk_cufs.Database().protocols()  
+  for p in protocols:
+    if "search" in p:
+      assert len(bob.db.cuhk_cufs.Database().tobjects(protocol=p)) == world
+      assert len(bob.db.cuhk_cufs.Database().tclients(protocol=p)) == world
+      assert len(bob.db.cuhk_cufs.Database().tmodel_ids(protocol=p)) == world
+
+
+
+def test08_strings():
   
   db = bob.db.cuhk_cufs.Database()
 
@@ -185,7 +214,7 @@ def test06_strings():
           assert f.group    == g
        
 
-def test07_annotations():
+def test09_annotations():
 
   db = bob.db.cuhk_cufs.Database()
 

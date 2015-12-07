@@ -52,6 +52,12 @@ setup(
       'bob.db': [
         'cuhk_cufs = bob.db.cuhk_cufs.driver:Interface',
       ],
+      
+      # scripts should be declared using this entry:
+      'console_scripts' : [
+        'evaluate_cufs.py     = bob.db.cuhk_cufs.scripts.evaluate_cufs:main',
+      ],      
+      
     },
 
     classifiers = [
