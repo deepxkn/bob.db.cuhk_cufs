@@ -145,7 +145,7 @@ To fetch the Z-Norm object files for the first split of the search protocol (jus
 
 .. code-block:: python
 
-   >>> import bob.db.cufsf
+   >>> import bob.db.cufs
    >>> db = bob.db.cufs.Database()
    >>> zobjects = db.zobjects(protocol="search_split1_p2s")
    
@@ -159,7 +159,7 @@ To fetch the T-Norm object files for the first split of the search protocol (jus
 
 .. code-block:: python
 
-   >>> import bob.db.cufsf
+   >>> import bob.db.cufs
    >>> db = bob.db.cufs.Database()
    >>> zobjects = db.tobjects(protocol="search_split1_p2s")
 
