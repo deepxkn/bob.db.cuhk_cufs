@@ -214,7 +214,7 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
   pyplot.xlabel('Rank')
   pyplot.ylabel('Probability (\%)')
   pyplot.xticks(ticks, [str(t) for t in ticks])
-  pyplot.axis([0, max_x, 90, 100])
+  pyplot.axis([0, max_x, 85, 100])
   pyplot.legend(loc=position, prop = {'size':fontsize})
   pyplot.title(title)
   pyplot.grid(True)
