@@ -52,18 +52,20 @@ def command_line_arguments(command_line_parameters):
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
   parser.add_argument('-d', '--dev-files', required=True, nargs='+', help = "A list of score files of the development set.")
+  
+  parser.add_argument('-n', '--report-name', default="report", help = "The name of the report")
+  
+  parser.add_argument('-r', '--roc', action='store_true', default=False, help="Add ROC in the report")
+  parser.add_argument('-e', '--det', action='store_true', default=False, help="Add DET in the report")
 
-  parser.add_argument('-s', '--directory', default = '.', help = "A directory, where to find the --dev-files and the --eval-files")
 
-  parser.add_argument('-c', '--criterion', choices = ('EER', 'HTER'), help = "If given, the threshold of the development set will be computed with this criterion.")
-  parser.add_argument('--cost', default=0.99,  help='Cost for FAR in minDCF')
-  parser.add_argument('-r', '--rr', action = 'store_true', help = "If given, the Recognition Rate will be computed.")
   parser.add_argument('-l', '--legends', nargs='+', help = "A list of legend strings used for ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")
+
+  parser.add_argument('-i', '--linestyle', nargs='+', help = "A list of line styles ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")  
+  
+  
   parser.add_argument('-F', '--legend-font-size', type=int, default=18, help = "Set the font size of the legends.")
   parser.add_argument('-P', '--legend-position', type=int, help = "Set the font size of the legends.")
-  parser.add_argument('-R', '--roc', help = "If given, ROC curves will be plotted into the given pdf file.")
-  parser.add_argument('-D', '--det', help = "If given, DET curves will be plotted into the given pdf file.")
-  parser.add_argument('-C', '--cmc', help = "If given, CMC curves will be plotted into the given pdf file.")
   parser.add_argument('--parser', default = '4column', choices = ('4column', '5column'), help="The style of the resulting score files. The default fits to the usual output of score files.")
 
   # add verbose option
@@ -89,7 +91,10 @@ def command_line_arguments(command_line_parameters):
   return args
 
 
-def _plot_roc(scores_input, colors, labels, title, fontsize=18, position=None):
+def _plot_roc(scores_input, colors, labels, title, linestyle=None,fontsize=18, position=None):
+
+  linestyle = ['-','--','-','--','-','--']
+
   if position is None: position = 4
   figure = pyplot.figure()
     
@@ -112,7 +117,11 @@ def _plot_roc(scores_input, colors, labels, title, fontsize=18, position=None):
     frr_average = numpy.mean(frrs_accumulator, axis=0)
     far_average = numpy.mean(fars_accumulator, axis=0); far_std = numpy.std(fars_accumulator, axis=0)    
 
-    pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i])
+    if(linestyle is not None):
+      pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i].replace("\\",""))
+    else:
+      pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i])
+    
     pyplot.errorbar(frr_average*100, 100. - 100.0*far_average, far_std*100, lw=0.5, ms=10)    
     
     offset += step
@@ -135,6 +144,7 @@ def _plot_roc(scores_input, colors, labels, title, fontsize=18, position=None):
 
 
 def _plot_det(scores_input, colors, labels, title, fontsize=18, position=None):
+
   if position is None: position = 1
   # open new page for current plot
   figure = pyplot.figure(figsize=(8.2,8))
@@ -179,6 +189,8 @@ def _plot_det(scores_input, colors, labels, title, fontsize=18, position=None):
   return figure
 
 def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
+  linestyle = ['-','--','-','--','-','--']
+
   if position is None: position = 4
   # open new page for current plot
   figure = pyplot.figure()
@@ -205,7 +217,8 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
     cmc_std     = numpy.std(cmc_accumulator, axis=0); cmc_std[-1]
     cmc_average = numpy.mean(cmc_accumulator, axis=0)
     
-    pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i])
+    pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i])
+    
     pyplot.errorbar(range(1, cmc_average.shape[0]+1), cmc_average*100, cmc_std*100, lw=0.5, ms=10)
     offset += step    
 
@@ -222,6 +235,15 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
   return figure
 
 
+
+#def generate_html(cmcs, path):
+#"""
+#Generates an
+#"""
+
+
+
+
 def main(command_line_parameters=None):
   """Reads score files, computes error measures and plots curves."""
 
@@ -231,72 +253,65 @@ def main(command_line_parameters=None):
   cmap = pyplot.cm.get_cmap(name='hsv')
   colors = [cmap(i) for i in numpy.linspace(0, 1.0, len(args.dev_files)+1)]
 
-  if args.criterion or args.roc or args.det:
+  #Creating a multipage PDF
+  pdf = PdfPages(args.report_name + ".pdf")
+
+ 
+  ################ PLOTING CMC ##############
+  logger.info("Loading CMC data on the development ")
+  cmc_parser = {'4column' : bob.measure.load.cmc_four_column, '5column' : bob.measure.load.cmc_five_column}[args.parser]
+  cmcs_dev = [cmc_parser(f) for f in args.dev_files]
+  logger.info("Plotting CMC curves")
+  try:
+    # create a separate figure for dev and eval
+    pdf.savefig(_plot_cmc(cmcs_dev, colors, args.legends, "CUHK-CUFS CMC between 5 splits", args.legend_font_size, args.legend_position))
+  except RuntimeError as e:
+    raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
+    
+    
+  #if args.rr:
+    #logger.info("Computing recognition rate on the development ")
+    #for i in range(len(cmcs_dev)):
+      #rr = bob.measure.recognition_rate(cmcs_dev[i])
+      #print("The Recognition Rate of the development set of '%s' is %2.3f%%" % (args.legends[i], rr * 100.))
+
+ 
+  ################ PLOTING CMC ##############
+  if args.roc or args.det:
     score_parser = {'4column' : bob.measure.load.split_four_column, '5column' : bob.measure.load.split_five_column}[args.parser]
 
     # First, read the score files
     logger.info("Loading %d score files of the development set", len(args.dev_files))
-    scores_dev = [score_parser(os.path.join(args.directory, f)) for f in args.dev_files]
+    scores_dev = [score_parser(f) for f in args.dev_files]
 
 
-    if args.criterion:
-      logger.info("Computing %s on the development " % args.criterion )
-      for i in range(len(scores_dev)):
-        # compute threshold on development set
-        threshold = {'EER': bob.measure.eer_threshold, 'HTER' : bob.measure.min_hter_threshold} [args.criterion](scores_dev[i][0], scores_dev[i][1])
-        # apply threshold to development set
-        far, frr = bob.measure.farfrr(scores_dev[i][0], scores_dev[i][1], threshold)
-        print("The %s of the development set of '%s' is %2.3f%%" % (args.criterion, args.legends[i], (far + frr) * 50.)) # / 2 * 100%
-
-
-
+    ################ PLOTING ROC ##############
     if args.roc:
-      logger.info("Plotting ROC curves to file '%s'", args.roc)
+      logger.info("Plotting ROC curves ")
       try:
-        # create a multi-page PDF for the ROC curve
-        pdf = PdfPages(args.roc)
         # create a separate figure for dev and eval
         pdf.savefig(_plot_roc(scores_dev, colors, args.legends, "CUHK-CUFS ROC Curve between 5 splits", args.legend_font_size, args.legend_position))
         #del frrs_dev
-        pdf.close()
       except RuntimeError as e:
         raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
 
+
+    ################ PLOTING DET ##############
     if args.det:
       logger.info("Computing DET curves on the development ")
       #dets_dev = [bob.measure.det(scores[0], scores[1], 1000) for scores in scores_dev]
 
-      logger.info("Plotting DET curves to file '%s'", args.det)
+      logger.info("Plotting DET curves")
       try:
-        # create a multi-page PDF for the ROC curve
-        pdf = PdfPages(args.det)
         # create a separate figure for dev and eval
         pdf.savefig(_plot_det(scores_dev, colors, args.legends, "CUHK-CUFS DET between 5 splits", args.legend_font_size, args.legend_position))
         #del dets_dev
-        pdf.close()
       except RuntimeError as e:
         raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
 
+  pdf.close()
+  
+  
+  
 
-  if args.cmc or args.rr:
-    logger.info("Loading CMC data on the development ")
-    cmc_parser = {'4column' : bob.measure.load.cmc_four_column, '5column' : bob.measure.load.cmc_five_column}[args.parser]
-    cmcs_dev = [cmc_parser(os.path.join(args.directory, f)) for f in args.dev_files]
-
-  if args.cmc:
-    logger.info("Plotting CMC curves to file '%s'", args.cmc)
-    try:
-      # create a multi-page PDF for the ROC curve
-      pdf = PdfPages(args.cmc)
-      # create a separate figure for dev and eval
-      pdf.savefig(_plot_cmc(cmcs_dev, colors, args.legends, "CUHK-CUFS CMC between 5 splits", args.legend_font_size, args.legend_position))
-      pdf.close()
-    except RuntimeError as e:
-      raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
-
-  if args.rr:
-    logger.info("Computing recognition rate on the development ")
-    for i in range(len(cmcs_dev)):
-      rr = bob.measure.recognition_rate(cmcs_dev[i])
-      print("The Recognition Rate of the development set of '%s' is %2.3f%%" % (args.legends[i], rr * 100.))
 
