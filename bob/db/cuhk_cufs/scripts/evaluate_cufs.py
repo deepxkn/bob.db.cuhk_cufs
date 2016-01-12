@@ -38,7 +38,7 @@ matplotlib.rc('text', usetex=True)
 matplotlib.rc('font', family='serif')
 matplotlib.rc('lines', linewidth = 4)
 # increase the default font size
-matplotlib.rc('font', size=18)
+
 
 import bob.core
 logger = bob.core.log.setup("bob.bio.base")
@@ -64,7 +64,7 @@ def command_line_arguments(command_line_parameters):
   parser.add_argument('-i', '--linestyle', nargs='+', help = "A list of line styles ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")  
   
   
-  parser.add_argument('-F', '--legend-font-size', type=int, default=18, help = "Set the font size of the legends.")
+  parser.add_argument('-F', '--legend-font-size', type=int, default=8, help = "Set the font size of the legends.")
   parser.add_argument('-P', '--legend-position', type=int, help = "Set the font size of the legends.")
   parser.add_argument('--parser', default = '4column', choices = ('4column', '5column'), help="The style of the resulting score files. The default fits to the usual output of score files.")
 
@@ -91,9 +91,10 @@ def command_line_arguments(command_line_parameters):
   return args
 
 
-def _plot_roc(scores_input, colors, labels, title, linestyle=None,fontsize=18, position=None):
+def _plot_roc(scores_input, colors, labels, title, fontsize=18, position=None):
 
-  linestyle = ['-','--','-','--','-','--']
+  #linestyle = ['-','--','-','--','-','--']
+  linestyle = None
 
   if position is None: position = 4
   figure = pyplot.figure()
@@ -105,6 +106,10 @@ def _plot_roc(scores_input, colors, labels, title, linestyle=None,fontsize=18, p
   offset = 0
   step   = int(len(scores_input)/len(labels))
  
+  params = {'legend.fontsize': int(fontsize)}
+  matplotlib.rcParams.update(params)
+
+
   #For each group of labels
   for i in range(len(labels)):
 
@@ -118,11 +123,11 @@ def _plot_roc(scores_input, colors, labels, title, linestyle=None,fontsize=18, p
     far_average = numpy.mean(fars_accumulator, axis=0); far_std = numpy.std(fars_accumulator, axis=0)    
 
     if(linestyle is not None):
-      pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i].replace("\\",""))
+      pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, lw=2, ms=10, mew=1.5, label=labels[i], color=colors[i], ls=linestyle[i].replace("\\",""))
     else:
-      pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i])
+      pyplot.semilogx(frr_average*100, 100. - 100.0*far_average, lw=2, ms=10, mew=1.5, label=labels[i], color=colors[i])
     
-    pyplot.errorbar(frr_average*100, 100. - 100.0*far_average, far_std*100, lw=0.5, ms=10)    
+    pyplot.errorbar(frr_average*100, 100. - 100.0*far_average, far_std*100, lw=0.5, ms=10, color=colors[i])    
     
     offset += step
     
@@ -137,7 +142,7 @@ def _plot_roc(scores_input, colors, labels, title, linestyle=None,fontsize=18, p
   pyplot.xlabel('FAR (\%)')
   pyplot.ylabel('CAR (\%)')
   pyplot.grid(True, color=(0.6,0.6,0.6))
-  pyplot.legend(loc=position, prop = {'size':fontsize})
+  pyplot.legend(loc=position)
   pyplot.title(title)
 
   return figure
@@ -183,13 +188,14 @@ def _plot_det(scores_input, colors, labels, title, fontsize=18, position=None):
 
   pyplot.xlabel('FAR (\%)')
   pyplot.ylabel('FRR (\%)')
-  pyplot.legend(loc=position, prop = {'size':fontsize})
+  pyplot.legend(loc=position)
   pyplot.title(title)
 
   return figure
 
 def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
-  linestyle = ['-','--','-','--','-','--']
+  #linestyle = ['-','--','-','--','-','--']
+  linestyle = ['-','-','-','-','-','-','-','-','-']
 
   if position is None: position = 4
   # open new page for current plot
@@ -198,6 +204,10 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
   offset = 0
   step   = int(len(cmcs)/len(labels))
  
+  params = {'legend.fontsize': int(fontsize)}
+  matplotlib.rcParams.update(params)
+
+
   #For each group of labels
   max_x   =  0 #Maximum CMC size
   for i in range(len(labels)):
@@ -217,9 +227,9 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
     cmc_std     = numpy.std(cmc_accumulator, axis=0); cmc_std[-1]
     cmc_average = numpy.mean(cmc_accumulator, axis=0)
     
-    pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i])
+    pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i], color=colors[i])
     
-    pyplot.errorbar(range(1, cmc_average.shape[0]+1), cmc_average*100, cmc_std*100, lw=0.5, ms=10)
+    pyplot.errorbar(range(1, cmc_average.shape[0]+1), cmc_average*100, cmc_std*100, lw=0.5, ms=10,color=colors[i])
     offset += step    
 
   # change axes accordingly
@@ -227,8 +237,8 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
   pyplot.xlabel('Rank')
   pyplot.ylabel('Probability (\%)')
   pyplot.xticks(ticks, [str(t) for t in ticks])
-  pyplot.axis([0, max_x, 85, 100])
-  pyplot.legend(loc=position, prop = {'size':fontsize})
+  pyplot.axis([0, max_x, 50, 100])
+  pyplot.legend(loc=position)
   pyplot.title(title)
   pyplot.grid(True)
 
@@ -248,14 +258,16 @@ def main(command_line_parameters=None):
   """Reads score files, computes error measures and plots curves."""
 
   args = command_line_arguments(command_line_parameters)
-
+  
   # get some colors for plotting
-  cmap = pyplot.cm.get_cmap(name='hsv')
-  colors = [cmap(i) for i in numpy.linspace(0, 1.0, len(args.dev_files)+1)]
+  colors     = ['red','green','blue','cyan', 'magenta', 'yellow', 'black']  
+  if(len(args.dev_files)/len(args.legends)> 7):
+    cmap = pyplot.cm.get_cmap(name='hsv')
+    colors = [cmap(i) for i in numpy.linspace(0, 1.0, len(args.dev_files)/len(args.legends)+1)]
+
 
   #Creating a multipage PDF
   pdf = PdfPages(args.report_name + ".pdf")
-
  
   ################ PLOTING CMC ##############
   logger.info("Loading CMC data on the development ")

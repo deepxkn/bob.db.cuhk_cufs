@@ -112,7 +112,7 @@ def generate_html_output(client_id, scores, img_dir, db, args):
     enroll_html += "<img src='{0}'>".format(img_file.replace(args.output_dir,"./"))
 
   genuine_html = "<tr><th colspan='3'><b>Client {0}</b></th></tr>\n".format(client_id)
-  max_genuine_score = -numpy.inf
+  min_genuine_score = numpy.inf
   for genuine in scores['genuine']:
     img_file = os.path.join(args.preprocess_dir, genuine[0])+args.extension
     img = normalize4save(bob.io.base.load(img_file))
@@ -121,13 +121,13 @@ def generate_html_output(client_id, scores, img_dir, db, args):
     bob.io.base.create_directories_safe(os.path.dirname(img_file))      
     bob.io.base.save(img, img_file)
     genuine_html += "<tr><td>" + enroll_html + "</td> <td>" + "<img src='{0}'>".format(img_file.replace(args.output_dir,"./")) + "</td> <td style=\"color:blue;\"> <b>" + str(genuine[1]) + "</b></td> </tr>\n"
-    max_genuine_score = max(max_genuine_score, genuine[1])
+    min_genuine_score = min(min_genuine_score, genuine[1])
   
   
   impostor_html = ""
   for impostor in scores['impostor']:  
     #Do only when the score of the impostor is bigger than the genuine score
-    if(impostor[1] > max_genuine_score):
+    if(impostor[1] > min_genuine_score):
       img_file = os.path.join(args.preprocess_dir, impostor[0])+args.extension
       img = normalize4save(bob.io.base.load(img_file))
       img_file = os.path.join(img_dir,impostor[0])+".jpg"
