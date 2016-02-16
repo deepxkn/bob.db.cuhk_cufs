@@ -61,8 +61,10 @@ def command_line_arguments(command_line_parameters):
 
   parser.add_argument('-l', '--legends', nargs='+', help = "A list of legend strings used for ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")
 
-  parser.add_argument('-i', '--linestyle', nargs='+', help = "A list of line styles ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")  
+  parser.add_argument('-i', '--linestyle', nargs='+', help = "A list of line styles for the ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")  
   
+  parser.add_argument('-c', '--colors', nargs='+', help = "A list of line colors for the ROC, CMC and DET plots.")  
+
   
   parser.add_argument('-F', '--legend-font-size', type=int, default=8, help = "Set the font size of the legends.")
   parser.add_argument('-P', '--legend-position', type=int, help = "Set the font size of the legends.")
@@ -262,7 +264,8 @@ def main(command_line_parameters=None):
   args = command_line_arguments(command_line_parameters)
   
   # get some colors for plotting
-  colors     = ['red','green','blue','cyan', 'magenta', 'yellow', 'black']  
+  #colors     = ['red','green','blue','cyan', 'magenta', 'yellow', 'black']  
+  colors      = args.colors
   if(len(args.dev_files)/len(args.legends)> 7):
     cmap = pyplot.cm.get_cmap(name='hsv')
     colors = [cmap(i) for i in numpy.linspace(0, 1.0, len(args.dev_files)/len(args.legends)+1)]
