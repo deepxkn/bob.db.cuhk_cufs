@@ -73,7 +73,7 @@ def command_line_arguments(command_line_parameters):
 
   # parse arguments
   args = parser.parse_args(command_line_parameters)
-
+  
   # set verbosity level
   bob.core.log.set_verbosity_level(logger, args.verbose)
 
@@ -91,10 +91,7 @@ def command_line_arguments(command_line_parameters):
   return args
 
 
-def _plot_roc(scores_input, colors, labels, title, fontsize=18, position=None):
-
-  #linestyle = ['-','--','-','--','-','--']
-  linestyle = None
+def _plot_roc(scores_input, colors, labels, title, linestyle=None, fontsize=18, position=None):
 
   if position is None: position = 4
   figure = pyplot.figure()
@@ -148,7 +145,7 @@ def _plot_roc(scores_input, colors, labels, title, fontsize=18, position=None):
   return figure
 
 
-def _plot_det(scores_input, colors, labels, title, fontsize=18, position=None):
+def _plot_det(scores_input, colors, labels, title,linestyle=None, fontsize=18, position=None):
 
   if position is None: position = 1
   # open new page for current plot
@@ -170,7 +167,11 @@ def _plot_det(scores_input, colors, labels, title, fontsize=18, position=None):
     frr_average = numpy.mean(frrs_accumulator, axis=0)
     far_average = numpy.mean(fars_accumulator, axis=0); far_std = numpy.std(fars_accumulator, axis=0)
 
-    pyplot.plot(frr_average, far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i])
+    if(linestyle is not None):
+      pyplot.plot(frr_average, far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i].replace("\\",""))
+    else:
+      pyplot.plot(frr_average, far_average, color=colors[i], lw=2, ms=10, mew=1.5, label=labels[i])
+    
     pyplot.errorbar(frr_average, far_average, far_std, lw=0.5, ms=10)
     offset += step
   
@@ -193,9 +194,7 @@ def _plot_det(scores_input, colors, labels, title, fontsize=18, position=None):
 
   return figure
 
-def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
-  #linestyle = ['-','--','-','--','-','--']
-  linestyle = ['-','-','-','-','-','-','-','-','-']
+def _plot_cmc(cmcs, colors, labels, title, linestyle,  fontsize=18, position=None):
 
   if position is None: position = 4
   # open new page for current plot
@@ -226,8 +225,11 @@ def _plot_cmc(cmcs, colors, labels, title, fontsize=18, position=None):
       #cmc_average  += numpy.pad(cmc_curves[j],(0,padding_diff), 'constant',constant_values=(1))
     cmc_std     = numpy.std(cmc_accumulator, axis=0); cmc_std[-1]
     cmc_average = numpy.mean(cmc_accumulator, axis=0)
-    
-    pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i], color=colors[i])
+
+    if(linestyle is not None):    
+      pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i], ls=linestyle[i].replace('\\',''), color=colors[i])
+    else:
+      pyplot.semilogx(range(1, cmc_average.shape[0]+1), cmc_average * 100, lw=2, ms=10, mew=1.5, label=labels[i], color=colors[i])
     
     pyplot.errorbar(range(1, cmc_average.shape[0]+1), cmc_average*100, cmc_std*100, lw=0.5, ms=10,color=colors[i])
     offset += step    
@@ -276,7 +278,7 @@ def main(command_line_parameters=None):
   logger.info("Plotting CMC curves")
   try:
     # create a separate figure for dev and eval
-    pdf.savefig(_plot_cmc(cmcs_dev, colors, args.legends, "CUHK-CUFS CMC between 5 splits", args.legend_font_size, args.legend_position))
+    pdf.savefig(_plot_cmc(cmcs_dev, colors, args.legends, "CUHK-CUFS CMC between 5 splits", args.linestyle, args.legend_font_size, args.legend_position))
   except RuntimeError as e:
     raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
     
@@ -302,7 +304,7 @@ def main(command_line_parameters=None):
       logger.info("Plotting ROC curves ")
       try:
         # create a separate figure for dev and eval
-        pdf.savefig(_plot_roc(scores_dev, colors, args.legends, "CUHK-CUFS ROC Curve between 5 splits", args.legend_font_size, args.legend_position))
+        pdf.savefig(_plot_roc(scores_dev, colors, args.legends, "CUHK-CUFS ROC Curve between 5 splits", args.linestyle, args.legend_font_size, args.legend_position))
         #del frrs_dev
       except RuntimeError as e:
         raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
@@ -316,7 +318,7 @@ def main(command_line_parameters=None):
       logger.info("Plotting DET curves")
       try:
         # create a separate figure for dev and eval
-        pdf.savefig(_plot_det(scores_dev, colors, args.legends, "CUHK-CUFS DET between 5 splits", args.legend_font_size, args.legend_position))
+        pdf.savefig(_plot_det(scores_dev, colors, args.legends, "CUHK-CUFS DET between 5 splits", args.linestyle, args.legend_font_size, args.legend_position))
         #del dets_dev
       except RuntimeError as e:
         raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
