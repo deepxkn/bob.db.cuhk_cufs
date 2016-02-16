@@ -250,14 +250,6 @@ def _plot_cmc(cmcs, colors, labels, title, linestyle,  fontsize=18, position=Non
 
 
 
-#def generate_html(cmcs, path):
-#"""
-#Generates an
-#"""
-
-
-
-
 def main(command_line_parameters=None):
   """Reads score files, computes error measures and plots curves."""
 
@@ -285,12 +277,6 @@ def main(command_line_parameters=None):
   except RuntimeError as e:
     raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
     
-    
-  #if args.rr:
-    #logger.info("Computing recognition rate on the development ")
-    #for i in range(len(cmcs_dev)):
-      #rr = bob.measure.recognition_rate(cmcs_dev[i])
-      #print("The Recognition Rate of the development set of '%s' is %2.3f%%" % (args.legends[i], rr * 100.))
 
  
   ################ PLOTING CMC ##############
