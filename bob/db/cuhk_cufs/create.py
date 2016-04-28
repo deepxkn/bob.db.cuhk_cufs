@@ -24,7 +24,7 @@ This script creates the CUHK-CUFS database in a single pass.
 import os
 
 from .models import *
-from utils import ARFACEWrapper, XM2VTSWrapper, CUHKWrapper
+from .utils import ARFACEWrapper, XM2VTSWrapper, CUHKWrapper
 import numpy
 numpy.random.seed(10)
 
