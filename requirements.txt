@@ -1,0 +1,7 @@
+setuptools
+six
+bob.db.base
+bob.db.verification.utils
+bob.db.xm2vts
+bob.db.arface
+bob.db.verification.utils

@@ -22,6 +22,10 @@ from setuptools import setup, find_packages
 # Define package version
 version = open("version.txt").read().rstrip()
 
+
+from bob.extension.utils import load_requirements
+install_requires = load_requirements()
+
 setup(
 
     name='bob.db.cuhk_cufs',
@@ -38,12 +42,7 @@ setup(
     include_package_data=True,
     zip_safe = False,
 
-    install_requires=[
-      'setuptools',
-      'bob.db.xm2vts',
-      'bob.db.arface',
-      'bob.db.verification.utils' 
-    ],
+    install_requires=install_requires,
 
     namespace_packages = [
       'bob',
