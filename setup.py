@@ -19,10 +19,13 @@
 
 from setuptools import setup, find_packages
 
+# Define package version
+version = open("version.txt").read().rstrip()
+
 setup(
 
     name='bob.db.cuhk_cufs',
-    version='0.0.0a1',
+    version=version,
     description='CUHK Face Sketch Database (CUFS)',
     url='',
     license='BSD',
@@ -62,9 +65,9 @@ setup(
     },
 
     classifiers = [
-      'Development Status :: 4 - Beta',
+      'Development Status :: 5 - Production/Stable',
       'Intended Audience :: Education',
-      'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+      'License :: OSI Approved :: BSD License',
       'Natural Language :: English',
       'Programming Language :: Python',
       'Programming Language :: Python :: 3',
