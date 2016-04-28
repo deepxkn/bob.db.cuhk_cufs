@@ -25,7 +25,7 @@ setup(
     version='0.0.0a1',
     description='CUHK Face Sketch Database (CUFS)',
     url='',
-    license='GPLv3',
+    license='BSD',
     keywords = "",
     author='Tiago de Freitas Pereira',
     author_email='tiago.pereira@idiap.ch',
