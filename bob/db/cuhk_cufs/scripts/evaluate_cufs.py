@@ -58,6 +58,8 @@ def command_line_arguments(command_line_parameters):
   parser.add_argument('-r', '--roc', action='store_true', default=False, help="Add ROC in the report")
   parser.add_argument('-e', '--det', action='store_true', default=False, help="Add DET in the report")
 
+  parser.add_argument('--rr', '--recognition-rate', action='store_true', default=False, help="Compute the recognition rate (Rank 1)")
+
 
   parser.add_argument('-l', '--legends', nargs='+', help = "A list of legend strings used for ROC, CMC and DET plots; THE NUMBER OF PLOTS SHOULD BE MULTIPLE OF THE NUMBER OF LEGGENDS. IN THAT WAY, EACH SEGMENT WILL BE AVERAGED")
 
@@ -66,6 +68,10 @@ def command_line_arguments(command_line_parameters):
   parser.add_argument('-c', '--colors', nargs='+', help = "A list of line colors for the ROC, CMC and DET plots.")  
 
   
+  parser.add_argument('-t', '--title', type=str, default='', help = "Title of the plot")
+  parser.add_argument('-m', '--xmin', type=float, default=50, help = "Lower bound for the XAxis")
+  parser.add_argument('-a', '--xmax', type=float, default=50, help = "Upper bound for the XAxis")  
+
   parser.add_argument('-F', '--legend-font-size', type=int, default=8, help = "Set the font size of the legends.")
   parser.add_argument('-P', '--legend-position', type=int, help = "Set the font size of the legends.")
   parser.add_argument('--parser', default = '4column', choices = ('4column', '5column'), help="The style of the resulting score files. The default fits to the usual output of score files.")
@@ -196,7 +202,7 @@ def _plot_det(scores_input, colors, labels, title,linestyle=None, fontsize=18, p
 
   return figure
 
-def _plot_cmc(cmcs, colors, labels, title, linestyle,  fontsize=18, position=None):
+def _plot_cmc(cmcs, colors, labels, title, linestyle,  fontsize=18, position=None, xmin=0, xmax=100):
 
   if position is None: position = 4
   # open new page for current plot
@@ -207,6 +213,9 @@ def _plot_cmc(cmcs, colors, labels, title, linestyle,  fontsize=18, position=Non
  
   params = {'legend.fontsize': int(fontsize)}
   matplotlib.rcParams.update(params)
+  matplotlib.rc('xtick', labelsize=18)
+  matplotlib.rc('ytick', labelsize=18)
+  matplotlib.rcParams.update({'font.size': 20})
 
 
   #For each group of labels
@@ -241,12 +250,36 @@ def _plot_cmc(cmcs, colors, labels, title, linestyle,  fontsize=18, position=Non
   pyplot.xlabel('Rank')
   pyplot.ylabel('Probability (\%)')
   pyplot.xticks(ticks, [str(t) for t in ticks])
-  pyplot.axis([0, max_x, 50, 100])
+  #pyplot.axis([0, max_x, xmin, 100])
+  pyplot.axis([0, max_x, xmin, xmax])  
   pyplot.legend(loc=position)
   pyplot.title(title)
   pyplot.grid(True)
 
   return figure
+  
+  
+def _compute_rr(cmcs, labels):
+
+  offset = 0
+  step   = int(len(cmcs)/len(labels))
+  
+  #Computing the recognition rate for each score file
+  rr     = []   
+  for i in range(len(cmcs)):
+    rr.append(bob.measure.recognition_rate(cmcs[i]))
+
+  average   = {}
+  std_value = {}
+
+  for i in range(len(labels)):
+    l = labels[i]
+    average   = round(numpy.mean(rr[offset : offset+step])*100,3)
+    std_value = round(numpy.std(rr[offset : offset+step])*100,3)
+    print("The AVERAGE Recognition Rate of the development set of '{0}' along '{1}' splits is {2}  with standard deviation of {3}".format(l, int(step), average, std_value))
+    offset += step
+  
+  
 
 
 
@@ -257,8 +290,9 @@ def main(command_line_parameters=None):
   
   # get some colors for plotting
   #colors     = ['red','green','blue','cyan', 'magenta', 'yellow', 'black']  
-  colors      = args.colors
-  if(len(args.dev_files)/len(args.legends)> 7):
+  colors      = args.colors  
+  if(len(args.dev_files)/10 > len(args.legends)):
+  #if(len(args.dev_files)/5 > len(args.legends)):
     cmap = pyplot.cm.get_cmap(name='hsv')
     colors = [cmap(i) for i in numpy.linspace(0, 1.0, len(args.dev_files)/len(args.legends)+1)]
 
@@ -273,11 +307,15 @@ def main(command_line_parameters=None):
   logger.info("Plotting CMC curves")
   try:
     # create a separate figure for dev and eval
-    pdf.savefig(_plot_cmc(cmcs_dev, colors, args.legends, "CUHK-CUFS CMC between 5 splits", args.linestyle, args.legend_font_size, args.legend_position))
+    pdf.savefig(_plot_cmc(cmcs_dev, colors, args.legends, args.title, args.linestyle, args.legend_font_size, args.legend_position, args.xmin, args.xmax))
   except RuntimeError as e:
     raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
     
 
+
+  ################ Computing recognition rate ##############
+  if args.rr:
+    _compute_rr(cmcs_dev, args.legends)
  
   ################ PLOTING CMC ##############
   if args.roc or args.det:
@@ -293,7 +331,7 @@ def main(command_line_parameters=None):
       logger.info("Plotting ROC curves ")
       try:
         # create a separate figure for dev and eval
-        pdf.savefig(_plot_roc(scores_dev, colors, args.legends, "CUHK-CUFS ROC Curve between 5 splits", args.linestyle, args.legend_font_size, args.legend_position))
+        pdf.savefig(_plot_roc(scores_dev, colors, args.legends, args.title, args.linestyle, args.legend_font_size, args.legend_position))
         #del frrs_dev
       except RuntimeError as e:
         raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
@@ -307,7 +345,7 @@ def main(command_line_parameters=None):
       logger.info("Plotting DET curves")
       try:
         # create a separate figure for dev and eval
-        pdf.savefig(_plot_det(scores_dev, colors, args.legends, "CUHK-CUFS DET between 5 splits", args.linestyle, args.legend_font_size, args.legend_position))
+        pdf.savefig(_plot_det(scores_dev, colors, args.legends, args.title, args.linestyle, args.legend_font_size, args.legend_position))
         #del dets_dev
       except RuntimeError as e:
         raise RuntimeError("During plotting of ROC curves, the following exception occured:\n%s\nUsually this happens when the label contains characters that LaTeX cannot parse." % e)
