@@ -7,9 +7,9 @@
    :target: http://pythonhosted.org/bob.db.cuhk_cufs/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.png
    :target: https://www.idiap.ch/software/bob/docs/latest/bioidiap/bob.db.cuhk_cufs/master/index.html
-.. image:: https://travis-ci.org/bioidiap/bob.db.cuhk_cufs.svg?branch=v1.0.1
+.. image:: https://travis-ci.org/bioidiap/bob.db.cuhk_cufs.svg?branch=master
    :target: https://travis-ci.org/bioidiap/bob.db.cuhk_cufs
-.. image:: https://coveralls.io/repos/bioidiap/bob.db.cuhk_cufs/badge.svg?branch=v1.0.1
+.. image:: https://coveralls.io/repos/bioidiap/bob.db.cuhk_cufs/badge.svg?branch=master
    :target: https://coveralls.io/r/bioidiap/bob.db.cuhk_cufs
 .. image:: https://img.shields.io/badge/github-master-0000c0.png
    :target: https://github.com/bioidiap/bob.db.cuhk_cufs/tree/master
